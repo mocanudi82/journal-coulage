@@ -1,3 +1,8 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <title>Journal de coulage · Exemple Gouzeaucourt</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="manifest" href="manifest.webmanifest">
@@ -135,7 +140,12 @@ details summary{cursor:pointer;font:700 13px var(--f);color:var(--brand);min-hei
 .rp th{background:#001A70;color:#fff}
 .rp .tw{overflow-x:auto}
 @media (prefers-reduced-motion:no-preference){.sheet{animation:up .18s ease-out}@keyframes up{from{transform:translateY(30px);opacity:.4}}}
+@media (min-width:700px){html{background:#dfe3ea}#app{box-shadow:0 0 0 1px #c9ced8,0 8px 30px rgba(0,26,112,.18);max-width:430px}}
+html{-webkit-text-size-adjust:100%;overscroll-behavior:none}
+button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 </style>
+</head>
+<body>
 <div id="app"></div>
 <script src="docx.umd.js"></script>
 <script>
@@ -863,3 +873,5 @@ async function saveBlob(o){
 
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 </script>
+</body>
+</html>
