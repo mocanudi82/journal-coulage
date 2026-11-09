@@ -97,6 +97,7 @@ h3{font:700 12px/1.2 var(--f);letter-spacing:.08em;text-transform:uppercase;colo
 .seg button[data-v=ok][aria-pressed=true]{background:var(--ok);border-color:var(--ok);color:#fff}
 .seg button[data-v=nok][aria-pressed=true]{background:var(--nok);border-color:var(--nok);color:#fff}
 .seg button[data-v=na][aria-pressed=true]{background:var(--na);border-color:var(--na);color:#fff}
+.xseg button[aria-pressed=true]{background:var(--brand);color:#fff;border-color:var(--brand);font-weight:700}
 .phg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .phs{position:relative;padding:0;border:2px solid var(--line);border-radius:6px;background:var(--card,#fff);overflow:hidden;text-align:left;opacity:.55;cursor:pointer}
 .phs.on{border-color:var(--brand);opacity:1}
@@ -394,6 +395,11 @@ function syncExtra(p){
  XSYNC={id:p.id,n};
 }
 
+// ---------- intervenants et signatures ----------
+const roles=p=>[...ROLES,...((p&&p.xr)||[]).map(x=>[x.k,x.l])];
+const ctc=(p,k)=>{p.contacts=p.contacts||{};return p.contacts[k]||(p.contacts[k]={n:'',r:'',co:'',st:'p',why:''})};
+const STL={p:'Présent',a:'Absent pendant le coulage',nc:'Non concerné'};
+
 // ---------- shell render ----------
 const A={}; // actions
 function phase(p){return p.end?['Terminé','ok']:p.start?['En coulage','warn']:['Prérequis','na']}
@@ -424,7 +430,8 @@ document.addEventListener('change',e=>{const t=e.target.closest('[data-chg]');if
 function homeView(){
  const cards=S.pours.map(p=>{const s=stats(p),[ph,pc]=phase(p),nc=ncList(p).length;
   return `<button class="card" data-act="open" data-id="${p.id}" style="text-align:left;width:100%"><div class="row"><div class="grow"><div style="font:700 18px var(--f);color:var(--head)">WTG ${esc(p.wtg||'?')} · ${esc(p.project||'Projet')}</div><div class="small mut mono">${fdate(p.date)}${s.plan?` · ${f1(s.vol)} / ${f1(s.plan)} m³`:` · ${f1(s.vol)} m³`} · ${s.n} toupies</div></div><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end"><span class="pill ${pc}">${ph}</span>${nc?`<span class="pill nok">NC ${nc}</span>`:''}${p.example?'<span class="pill tag">exemple</span>':''}</div></div></button>`}).join('');
- return `<div><h2 style="margin-top:0">Journal de coulage</h2><div class="small mut">Fondations d’éoliennes · Direction Ingénierie – Département Génie Civil</div></div>${cards||'<p class="mut">Aucun coulage. Créez la fiche d’une éolienne pour commencer.</p>'}<button class="btn full" data-act="new">＋ Nouveau coulage</button><p class="small mut">Une fiche par éolienne. Les données restent sur ce téléphone ; exportez le rapport Word en fin de coulage.</p>
+ return `<div><h2 style="margin-top:0">Journal de coulage</h2><div class="small mut">Fondations d’éoliennes · Direction Ingénierie – Département Génie Civil</div></div>${cards||'<p class="mut">Aucun coulage. Créez la fiche d’une éolienne pour commencer.</p>'}<button class="btn full" data-act="new">＋ Nouveau coulage</button>${delivCard()}<p class="small mut">Une fiche par éolienne. Les données restent sur ce téléphone ; exportez le rapport Word en fin de coulage.</p>
+ <h3>Sauvegarde</h3><div class="grid2"><button class="btn ghost" data-act="backup">Sauvegarder mes fiches</button><button class="btn ghost" data-act="restore">Restaurer</button></div>
  <h3>Couleur de l’application</h3><div class="brandpick">${[['blue','Bleu','#1057C8'],['orange','Orange','#FE5815'],['green','Vert','#4F9E30']].map(([k,l,c])=>`<button data-act="brand" data-b="${k}" style="background:${c}" aria-label="${l}" aria-pressed="${(document.documentElement.dataset.brand||'blue')===k}"></button>`).join('')}</div>`;
 }
 A.brand=t=>{document.documentElement.dataset.brand=t.dataset.b;try{localStorage.setItem('journal-brand',t.dataset.b)}catch(e){}render()};
@@ -458,7 +465,7 @@ function itemCard(p,i){
  const [id,text,req,tags,ph,kind]=i,s=itemState(p,id);
  const need=ph==='r'&&!(s.ph&&s.ph.length);
  let extra='';
- if(kind==='temp')extra=`<div class="grid2"><label class="f">T° ext min (°C)<input class="in" inputmode="decimal" data-chg="fld" data-id="${id}" data-k="v1" value="${esc(s.v1??'')}"></label><label class="f">T° ext max (°C)<input class="in" inputmode="decimal" data-chg="fld" data-id="${id}" data-k="v2" value="${esc(s.v2??'')}"></label></div>`;
+ if(kind==='temp')extra=`<div class="grid2"><label class="f">T° ext min (°C)<input class="in" inputmode="decimal" data-chg="fld" data-id="${id}" data-k="v1" value="${esc(s.v1??'')}"></label><label class="f">T° ext max (°C)<input class="in" inputmode="decimal" data-chg="fld" data-id="${id}" data-k="v2" value="${esc(s.v2??'')}"></label></div><button class="cam" data-act="wxday" data-id="${id}" style="align-self:flex-start">Reprendre la météo du jour (réseau)</button>`;
  if(kind==='thermal')extra=`<div class="grid2"><label class="f">T max cœur (°C)<input class="in" inputmode="decimal" data-chg="thm" data-k="tmax" value="${esc(p.thermal.tmax)}"></label><label class="f">ΔT cœur / peau (°C)<input class="in" inputmode="decimal" data-chg="thm" data-k="dT" value="${esc(p.thermal.dT)}"></label></div>`;
  if(kind==='finish')extra=`<label class="f">Méthode de finition<select class="in" data-chg="fld" data-id="${id}" data-k="meth"><option value="">À choisir</option>${FINISH.map(o=>`<option${s.meth===o?' selected':''}>${esc(o)}</option>`).join('')}</select></label>`;
  const nokNoObs=(s.s==='nok'||s.s==='na')&&!(s.obs||'').trim();
@@ -564,6 +571,7 @@ function pourView(p){
  ${alerts.map(a=>`<div class="alert ${a[0]}"><div>${esc(a[1])}</div></div>`).join('')}
  ${labCard(p)}${freeCard(p)}
  <button class="btn ghost full" data-act="pres">${p.pres.from?'Ma présence : '+p.pres.from+' → '+(p.pres.to||'…'):'Ma présence sur site'}</button>
+ ${leaveCard(p)}
  ${p.end?'':`<button class="btn ghost full" data-act="truck">＋ Constat sur une toupie (facultatif)</button>
  <div class="grid2"><button class="btn ghost" data-act="tlog">T° ext.${lt?' '+lt.v+' °C':''}</button><button class="btn ghost" data-act="inc">Incident</button></div>`}
  <h3>Toupies</h3>
@@ -597,7 +605,7 @@ A.pres=()=>{const p=P();openSheet(`<h2>Ma présence sur site</h2><p class="small
  <div class="row sf"><button class="btn sec grow" data-act="close">Annuler</button><button class="btn grow" data-act="dopres">Enregistrer</button></div>`)};
 A.dopres=()=>{const p=P();p.pres={from:$('#pr-a').value,to:$('#pr-b').value};closeSheet();saveLS();render()};
 A.reopen=()=>{P().end=null;saveLS();render()};
-A.tlog=()=>openSheet(`<h2>T° extérieure</h2><div class="grid2"><label class="f">Heure<input class="in" type="time" id="t-t" value="${nowT()}"></label><label class="f">T° (°C)<input class="in" inputmode="decimal" id="t-v"></label></div><div class="row sf"><button class="btn sec grow" data-act="close">Annuler</button><button class="btn grow" data-act="dotlog">Enregistrer</button></div>`);
+A.tlog=()=>openSheet(`<h2>T° extérieure</h2><div class="grid2"><label class="f">Heure<input class="in" type="time" id="t-t" value="${nowT()}"></label><label class="f">T° (°C)<input class="in" inputmode="decimal" id="t-v"></label></div><button class="btn ghost" data-act="wxnow">Reprendre la météo du site (réseau)</button><div class="row sf"><button class="btn sec grow" data-act="close">Annuler</button><button class="btn grow" data-act="dotlog">Enregistrer</button></div>`);
 A.dotlog=()=>{const v=num($('#t-v').value);if(v==null){toast('Saisissez la température');return}const p=P();p.tlog.push({t:$('#t-t').value||nowT(),v:f1(v)});closeSheet();saveLS();render()};
 let D=null,DN=null;
 A.inc=()=>{DN={t:nowT(),dur:'',cause:'',nc:true,ph:[]};incSheet()};
@@ -688,12 +696,12 @@ A.settings=()=>{const p=P(),th=p.th;
  <h3>Centrales à béton</h3><div class="grid3">${[0,1,2].map(i=>`<label class="f">Centrale ${i+1}${i===2?' (secours)':''}<input class="in" data-chg="scn" data-i="${i}" value="${esc(cenList(p)[i]||'')}"></label>`).join('')}</div>
  <div class="grid2"><label class="f">Volume assiette + décaissé (m³)<input class="in" inputmode="decimal" data-chg="sp" data-k="volA" value="${esc(p.volA)}"></label><label class="f">Volume fût (m³)<input class="in" inputmode="decimal" data-chg="sp" data-k="volF" value="${esc(p.volF)}"></label></div>
   <h3>Intervenants (nom · représentant sur site)</h3>
- ${ROLES.map(([k,l])=>`<div class="grid2"><label class="f">${l}<input class="in" data-chg="sc" data-r="${k}" data-k="n" value="${esc(p.contacts[k].n)}"></label><label class="f">Sur site<input class="in" data-chg="sc" data-r="${k}" data-k="r" value="${esc(p.contacts[k].r)}"></label></div>`).join('')}
+ <p class="small mut" style="margin:0">Société, nom, présence et signature de chaque intervenant se renseignent dans l’onglet Rapport.</p>
+ <h3>Coordonnées du site (météo)</h3><div class="grid2"><label class="f">Latitude<input class="in" id="g-la" inputmode="decimal" data-chg="geo" data-k="lat" value="${esc((p.geo||{}).lat||'')}"></label><label class="f">Longitude<input class="in" id="g-lo" inputmode="decimal" data-chg="geo" data-k="lon" value="${esc((p.geo||{}).lon||'')}"></label></div><button class="btn ghost" data-act="geoloc">Utiliser ma position actuelle</button>
  <h3>Seuils</h3><div class="grid3">${f('flow','Débit min (m³/h)')}${f('dt','Charg.→pose (min)')}${f('gap','Écart toupies (min)')}${f('slumpMin','Affaiss. min')}${f('slumpMax','Affaiss. max')}${f('every','Essai / n toupies')}${f('tmin','T ext min')}${f('tmax','T ext max')}${f('seriesTot','Nb de séries')}</div>
  <button class="btn red full" data-act="delpour">Supprimer ce coulage</button><div class="sf"><button class="btn full" data-act="close">Fermer</button></div>`)};
 A.scn=t=>{const p=P(),l=cenList(p);while(l.length<3)l.push('');l[+t.dataset.i]=t.value.trim();p.centrales=l.filter(Boolean).join(', ');saveLS();later()};
 A.sp=t=>{P()[t.dataset.k]=t.value;saveLS();later()};
-A.sc=t=>{P().contacts[t.dataset.r][t.dataset.k]=t.value;saveLS()};
 A.sth=t=>{later();const p=P(),k=t.dataset.k,v=num(t.value);if(v==null)return;p.th[k]=v;if(k==='seriesTot'){const n=Math.max(1,Math.round(v));while(p.series.length<n)p.series.push(null);p.series.length=n}saveLS();render()};
 A.delpour=()=>{openSheet(`<h2>Supprimer ce coulage ?</h2><p>Les saisies et photos de cette fiche seront effacées de ce téléphone.</p><div class="row sf"><button class="btn sec grow" data-act="close">Annuler</button><button class="btn red grow" data-act="dodel">Supprimer</button></div>`)};
 A.dodel=()=>{const id=S.cur;S.pours=S.pours.filter(x=>x.id!==id);S.cur=null;closeSheet();saveLS();render()};
@@ -755,22 +763,36 @@ function reportModel(p){
  return {s,nc,pr,gate:rows(GATE),chk:CHECKS.map(([t,it])=>({t,rows:rows(it)})),
   counts:(()=>{const c={ok:0,nok:0,na:0,todo:0};ALL.forEach(i=>{const x=itemState(p,i[0]).s;c[x||'todo']++});return c})()};
 }
-function reportView(p){
- const m=reportModel(p),c=m.counts;
+function reportWarn(p,m){
+ const c=m.counts;
  const warn=[];
  if(c.todo)warn.push(`${c.todo} point(s) non renseigné(s)`);
  const decl=ALL.filter(i=>itemState(p,i[0]).src).length;if(decl)warn.push(`${decl} point(s) déclaré(s) par un tiers (indiqué au rapport)`);
  if(pr_missing(m))warn.push(`${m.pr.missing.length} photo(s) requise(s) manquante(s)`);
+ {const miss=roles(p).filter(([k])=>{const c=ctc(p,k);return (c.st||'p')==='p'&&!p.sig[k]}).length;if(miss)warn.push(`${miss} signature(s) manquante(s) (ou marquez l’intervenant absent / non concerné)`);const nn=roles(p).filter(([k])=>{const c=ctc(p,k);return (c.st||'p')!=='nc'&&!(c.n||'').trim()&&!(c.co||'').trim()}).length;if(nn)warn.push(`${nn} intervenant(s) sans nom ni société`)}
  const missObs=ALL.filter(i=>{const s=itemState(p,i[0]);return (s.s==='nok'||s.s==='na')&&!(s.obs||'').trim()}).length;
  if(missObs)warn.push(`${missObs} observation(s) NON/NA à justifier`);
- const sigs=ROLES.map(([k,l])=>`<div class="card" style="display:flex;flex-direction:column;gap:6px"><div class="row"><b class="grow" style="font:700 15px var(--f);color:var(--head)">${l}</b>${p.sig[k]?'<span class="pill ok">SIGNÉ</span>':''}</div><div class="small mut mono">${esc(p.contacts[k].n||'nom à renseigner')}${p.contacts[k].r?' · '+esc(p.contacts[k].r):''}</div>${p.sig[k]?`<img src="${p.sig[k].img}" alt="Signature" style="height:60px;object-fit:contain;background:#fff;border-radius:6px;border:1px solid var(--line)">`:''}<button class="btn ghost" data-act="sign" data-r="${k}">${p.sig[k]?'Refaire la signature':'Signer'}</button></div>`).join('');
+ return warn;
+}
+function reportView(p){
+ const m=reportModel(p),c=m.counts;
+ const warn=reportWarn(p,m);
+ const sigs=roles(p).map(([k,l])=>{const c=ctc(p,k),st=c.st||'p',cx=(p.xr||[]).some(x=>x.k===k);
+  return `<div class="card" style="display:flex;flex-direction:column;gap:8px"><div class="row"><b class="grow" style="font:700 15px var(--f);color:var(--head)">${esc(l)}</b>${st==='p'&&p.sig[k]?'<span class="pill ok">SIGNÉ</span>':st==='a'?'<span class="pill warn">ABSENT</span>':st==='nc'?'<span class="pill na">N.C.</span>':''}</div>
+  <div class="seg xseg" role="group" aria-label="Présence">${[['p','Présent'],['a','Absent'],['nc','Non concerné']].map(([v,t])=>`<button data-act="sst" data-r="${k}" data-v="${v}" aria-pressed="${st===v}">${t}</button>`).join('')}</div>
+  <div class="grid2"><label class="f">Société<input class="in" data-chg="sc" data-r="${k}" data-k="co" value="${esc(c.co||'')}"></label><label class="f">Nom${st==='a'?' (si connu)':''}<input class="in" data-chg="sc" data-r="${k}" data-k="n" value="${esc(c.n||'')}"></label></div>
+  ${st==='a'?`<label class="f">Remarque (ex. informé, non requis ce jour, visite prévue)<input class="in" data-chg="sc" data-r="${k}" data-k="why" value="${esc(c.why||'')}"></label>`:''}
+  ${st==='p'?`${p.sig[k]?`<img src="${p.sig[k].img}" alt="Signature" style="height:60px;object-fit:contain;background:#fff;border-radius:6px;border:1px solid var(--line)">`:''}<button class="btn ghost" data-act="sign" data-r="${k}">${p.sig[k]?'Refaire la signature':'Signer'}</button>`:''}
+  ${cx?`<button class="cam" style="border-style:solid;border-color:var(--line);color:var(--nok);align-self:flex-start" data-act="xrdel" data-r="${k}">Retirer cet intervenant</button>`:''}</div>`}).join('');
  return `<h2>Rapport de coulage</h2>
  <div class="kpis"><div class="kpi good"><b>${c.ok}</b><span>conformes</span></div><div class="kpi ${m.nc.length?'bad':''}"><b>${m.nc.length}</b><span>non-conf.</span></div><div class="kpi"><b>${c.todo}</b><span>à renseigner</span></div></div>
- ${warn.length?`<div class="alert warn"><div><b>Avant d’émettre :</b> ${warn.join(' · ')}.</div></div>`:`<div class="alert ok"><div>Fiche complète. Le rapport peut être émis.</div></div>`}
+ <div class="card small">${esc(summaryLine(p,m))}</div>
+ ${warn.length?`<div class="alert warn"><div><b>Rapport provisoire.</b> Avant d’émettre : ${warn.join(' · ')}.</div></div>`:`<div class="alert ok"><div>Fiche complète. Le rapport peut être émis.</div></div>`}
  <h3>Livrables à récupérer</h3><div class="card" style="display:flex;flex-direction:column;gap:10px">${DELIV.map(([id,l,n,r])=>`<label class="row" style="gap:10px;align-items:flex-start"><input type="checkbox" data-chg="dv" data-id="${id}" ${(p.deliv||{})[id]?'checked':''} style="width:22px;height:22px;margin-top:1px;flex:none"><span class="grow">${esc(l)}<br><span class="small mut">${n!=null?'avant le '+fdate(addDays(p.date,n)):'selon demande / planning'} · ${esc(r)}</span></span></label>`).join('')}</div>
  ${photoPicker(p)}
  <label class="f">Commentaires généraux / fiches de non-conformité ouvertes<textarea class="in" data-chg="cm" style="min-height:90px">${esc(p.comments)}</textarea></label>
- <h3>Signatures</h3>${sigs}
+ <h3>Intervenants et signatures</h3>${sigs}
+ <button class="btn ghost full" data-act="xradd">＋ Ajouter un intervenant</button>
  <button class="btn full" data-act="word">Exporter le rapport Word (.docx)</button>
  <details><summary>Aperçu du rapport</summary><div class="rp">${reportHTML(p,m)}</div></details>`;
 }
@@ -787,7 +809,7 @@ function reportHTML(p,m){
 }
 
 // ---------- signature pad ----------
-A.sign=t=>{const k=t.dataset.r,l=ROLES.find(r=>r[0]===k)[1];
+A.sign=t=>{const k=t.dataset.r,l=roles(P()).find(r=>r[0]===k)[1];
  openSheet(`<h2>Signature · ${l}</h2><canvas class="sigpad" id="sig" width="600" height="240"></canvas><div class="row sf"><button class="btn ghost grow" data-act="sigclr">Effacer</button><button class="btn sec grow" data-act="close">Annuler</button><button class="btn grow" data-act="sigok" data-r="${k}">Valider</button></div>`);
  const c=$('#sig'),x=c.getContext('2d');x.lineWidth=4;x.lineCap='round';x.strokeStyle='#111';let dn=false,any=false;
  const pt=e=>{const r=c.getBoundingClientRect();return [(e.clientX-r.left)*c.width/r.width,(e.clientY-r.top)*c.height/r.height]};
@@ -812,11 +834,18 @@ A.phauto=()=>{P().phSel={};saveLS();render()};
 A.phall=()=>{const p=P();p.phSel={};phList(p).forEach(x=>p.phSel[x.id]=true);saveLS();render()};
 A.phnone=()=>{const p=P();p.phSel={};phList(p).forEach(x=>p.phSel[x.id]=false);saveLS();render()};
 
+A.sc=t=>{ctc(P(),t.dataset.r)[t.dataset.k]=t.value;saveLS();later()};
+A.sst=t=>{ctc(P(),t.dataset.r).st=t.dataset.v;saveLS();render()};
+A.xradd=()=>openSheet(`<h2>Ajouter un intervenant</h2><label class="f">Fonction<input class="in" id="xr-l" placeholder="Ex. Géomètre, Pompe à béton, Fournisseur béton"></label><div class="row sf"><button class="btn sec grow" data-act="close">Annuler</button><button class="btn grow" data-act="xrsave">Ajouter</button></div>`);
+A.xrsave=()=>{const p=P(),l=$('#xr-l').value.trim();if(!l){toast('Saisissez la fonction');return}p.xr=p.xr||[];const k='x'+(1+p.xr.length+Math.floor(Math.random()*1000));p.xr.push({k,l});ctc(p,k);closeSheet();saveLS();render()};
+A.xrdel=t=>{const p=P(),k=t.dataset.r;p.xr=(p.xr||[]).filter(x=>x.k!==k);delete p.sig[k];if(p.contacts)delete p.contacts[k];saveLS();render()};
+
 // ---------- Word export (docx 8.5) ----------
 function dataToBytes(u){const b=atob(u.split(',')[1]),a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a}
 function imgSize(u){return new Promise(r=>{const i=new Image();i.onload=()=>r([i.naturalWidth,i.naturalHeight]);i.onerror=()=>r([4,3]);i.src=u})}
 async function buildDocx(p){
  const d=docx,m=reportModel(p),s=m.s,W=15438;
+ const WL=reportWarn(p,m),DRAFT=WL.length>0;
  const FONT='Arial',BLUE='001A70';
  const run=(t,o={})=>new d.TextRun({text:String(t??''),font:FONT,size:o.size||18,bold:o.bold,italics:o.it,color:o.color||'333333'});
  const para=(t,o={})=>new d.Paragraph({spacing:{before:o.before||0,after:o.after??60},alignment:o.al,children:Array.isArray(t)?t:[run(t,o)]});
@@ -837,6 +866,8 @@ async function buildDocx(p){
  const half=Math.ceil(info.length/2),iw=[2600,5100];
  out.push(new d.Table({width:{size:W,type:d.WidthType.DXA},columnWidths:[2600,5100,2600,5138],rows:Array.from({length:half},(_,i)=>new d.TableRow({children:[cell(info[i][0],2600,{bold:true,fill:'F8F7F7'}),cell(info[i][1]||'–',5100),info[i+half]?cell(info[i+half][0],2600,{bold:true,fill:'F8F7F7'}):cell('',2600),info[i+half]?cell(info[i+half][1]||'–',5138):cell('',5138)]}))}));
  out.push(h('Synthèse'));
+ out.push(para(summaryLine(p,m),{bold:true,after:80}));
+ if(DRAFT)out.push(para('Rapport provisoire — à lever avant émission : '+WL.join(' · ')+'.',{color:'B3261E',size:16}));
  const c=m.counts;
  if(cenList(p).length>1)out.push(para('Volumes par centrale : '+cenTotals(p).map(x=>`${x.c} ${f1(x.vol)} m³ (${x.n} toupies)`).join(' · ')+'.'));
  out.push(para(`Points conformes : ${c.ok} · non conformes : ${c.nok} · sans objet : ${c.na} · non renseignés : ${c.todo} · non-conformités relevées : ${m.nc.length}.`));
@@ -865,10 +896,11 @@ async function buildDocx(p){
  out.push(para(p.comments||'–'));
  out.push(h('Responsables du contrôle'));
  const sigRows=[];
- for(const [k,l] of ROLES){const sg=p.sig[k];let ch=para('',{after:0});
+ for(const [k,l] of roles(p)){const c=ctc(p,k),st=c.st||'p',sg=st==='p'?p.sig[k]:null;let ch=para(st==='p'&&!sg?'non signé':'',{after:0,size:15,color:'777777'});
   if(sg){const [w,hh]=await imgSize(sg.img);const wd=150;ch=new d.Paragraph({children:[new d.ImageRun({data:dataToBytes(sg.img),transformation:{width:wd,height:Math.round(wd*hh/w)}})]})}
-  sigRows.push([l,p.contacts[k].n,p.contacts[k].r,sg?sg.at:'',C([ch],{})])}
- out.push(tbl([3300,3300,3000,2300,3538],['Rôle','Nom','Représentant sur site','Date','Signature'],sigRows));
+  const stt=STL[st]+(st==='a'&&c.why?' · '+c.why:'');
+  sigRows.push([l,c.co||'–',c.n||(st==='p'?(c.r||'–'):'–'),stt,sg?sg.at:'',C([ch],{})])}
+ out.push(tbl([2700,2700,2700,3000,1700,2638],['Intervenant','Société','Nom','Présence','Date','Signature'],sigRows));
  // photo annex
  const PL=phList(p);const photos=PL.filter(x=>x.on&&x.cat!=='Registre labo').map(x=>[PH[x.id],x.label]);const labs=PL.filter(x=>x.on&&x.cat==='Registre labo');
  for(let k=0;k<labs.length;k++){const u=PH[labs[k].id];const [w,hh]=await imgSize(u);const sc=Math.min(900/w,500/hh);
@@ -891,7 +923,8 @@ async function buildDocx(p){
   new d.Paragraph({spacing:{after:0},children:[run('Projet éolien · '+(p.project||''),{size:40,bold:true,color:BLUE})]}),
   new d.Paragraph({spacing:{after:120},children:[run('Check-list de bétonnage des fondations · WTG '+p.wtg,{size:40,bold:true,color:BLUE})]}),
   new d.Paragraph({spacing:{after:0},children:[run('Direction Ingénierie – Département Génie Civil',{size:20,color:'555555'})]}),
-  new d.Paragraph({spacing:{after:700},children:[run(fdate(p.date),{size:20,color:BLUE})]}),
+  new d.Paragraph({spacing:{after:DRAFT?200:700},children:[run(fdate(p.date),{size:20,color:BLUE})]}),
+  ...(DRAFT?[new d.Paragraph({spacing:{after:500},children:[run('RAPPORT PROVISOIRE · '+WL.length+' point(s) à lever avant émission',{size:22,bold:true,color:'B3261E'})]})]:[]),
   new d.Paragraph({spacing:{after:900},children:[lg(EDF.cover,300,EDF_AR.cover)]}),
   para('Print this document only if you need to.',{size:16,color:'555555',after:120}),
   para('EDF power solutions',{size:16,bold:true,after:0}),para('43 Boulevard des BOUVETS',{size:16,after:0}),para('CS 90310',{size:16,after:0}),para('92 741 NANTERRE CEDEX',{size:16,after:0}),
@@ -905,7 +938,7 @@ async function buildDocx(p){
   new d.TableRow({children:[hc([hp(p.rev||'00',{size:18,color:'333333'})],hw[2]),hc([new d.Paragraph({alignment:d.AlignmentType.CENTER,spacing:{after:0},children:[new d.TextRun({children:[d.PageNumber.CURRENT,' / ',d.PageNumber.TOTAL_PAGES],font:FONT,size:18,color:'333333'})]})],hw[3])]}),
   new d.TableRow({children:[hc([hp('Document code')],hw[2]+hw[3],{columnSpan:2})]}),
   new d.TableRow({children:[hc([hp(p.docCode||'EPSGR-ENG-XXxx',{size:18,bold:true,color:BLUE})],hw[2]+hw[3],{columnSpan:2})]}),
-  new d.TableRow({children:[hc([hp('Date '+fdate(p.date),{size:16,color:'333333'})],hw[2]+hw[3],{columnSpan:2})]})]}),
+  new d.TableRow({children:[hc([hp((DRAFT?'PROVISOIRE · ':'')+'Date '+fdate(p.date),{size:16,bold:true,color:DRAFT?'B3261E':'333333'})],hw[2]+hw[3],{columnSpan:2})]})]}),
   new d.Paragraph({spacing:{after:0},children:[]})]});
  const doc=new d.Document({creator:p.drafter||'Journal de coulage',title:`Check-list de bétonnage WTG ${p.wtg}`,
   styles:{default:{document:{run:{font:FONT,size:18,color:'333333'}}}},
@@ -953,6 +986,69 @@ const SEED=false;
  render();
  await idbOpen();await idbLoadAll();render();
 })();
+
+
+// =============== extras : résumé, provisoire, avant de partir, livrables, sauvegarde, météo ===============
+function summaryLine(p,m){
+ const s=stats(p),ab=roles(p).filter(([k])=>(ctc(p,k).st||'p')==='a').map(([k,l])=>l);
+ return `WTG ${p.wtg} · ${fdate(p.date)} · ${f1(s.vol)} m³ coulés${s.plan?' sur '+f1(s.plan)+' prévus':''} · ${s.n} toupies${s.flow!=null?' · débit moyen '+f1(s.flow)+' m³/h':''} · ${m.nc.length} non-conformité(s)`+(ab.length?' · absent : '+ab.join(', '):'')+'.';
+}
+// ---- avant de quitter le chantier ----
+function leaveCard(p){
+ const L=p.lab||{},fin=CHECKS.filter(c=>c[0].startsWith('Finition')).flatMap(c=>c[1]);
+ const finOk=fin.length&&fin.every(i=>{const s=itemState(p,i[0]);return s.s||s.src});
+ const done=p.series.filter(Boolean).length;
+ const rows=[
+  [p.pres&&p.pres.to,'Heure de départ enregistrée (Ma présence)'],
+  [!!p.end,'Heure de fin du coulage et sa source (déclarée par le laboratoire ou l’Entreprise)'],
+  [(L.ph||[]).length>0,'Photos du registre du laboratoire (toutes les pages)'],
+  [(num(L.n)||0)+(num(L.nF)||0)>0,'Totaux du registre reportés (toupies, m³)'],
+  [!!finOk,'Finition (pentes, chanfrein, surface) : photos demandées à l’Entreprise ou points renseignés'],
+  [done>0,'Séries d’éprouvettes enregistrées ('+done+' / '+p.series.length+')'],
+  [roles(p).every(([k])=>{const c=ctc(p,k);return (c.st||'p')!=='p'||p.sig[k]||c.n||c.co}),'Intervenants présents identifiés (Rapport)']];
+ const open=rows.filter(r=>!r[0]).length;
+ return `<div class="card" style="display:flex;flex-direction:column;gap:6px"><b style="font:700 15px var(--f);color:var(--head)">Avant de quitter le chantier</b>
+ ${rows.map(([ok,t])=>`<div class="row" style="gap:8px;align-items:flex-start"><span class="pill ${ok?'ok':'warn'}" style="flex:none">${ok?'OK':'À FAIRE'}</span><span class="small">${esc(t)}</span></div>`).join('')}
+ <div class="small mut">${open?open+' point(s) à traiter ou à demander avant de partir.':'Tout est en ordre pour partir.'}</div></div>`;
+}
+// ---- livrables à récupérer (accueil) ----
+function delivTodo(){
+ const out=[];S.pours.forEach(p=>DELIV.forEach(([id,l,n])=>{if(n!=null&&!(p.deliv||{})[id])out.push({p,id,l,due:addDays(p.date,n)})}));
+ out.sort((a,b)=>a.due<b.due?-1:a.due>b.due?1:0);return out;
+}
+function delivCard(){
+ const l=delivTodo().slice(0,8);if(!l.length)return '';
+ const t=today();
+ return `<h3>Livrables à récupérer</h3><div class="card" style="display:flex;flex-direction:column;gap:8px">${l.map(x=>`<div class="row" style="gap:8px;align-items:flex-start"><span class="pill ${x.due<t?'nok':'warn'}" style="flex:none">${x.due<t?'EN RETARD':fdate(x.due)}</span><span class="small grow">WTG ${esc(x.p.wtg||'?')} · ${esc(x.l)}${x.due<t?' <span class="mut">(échéance '+fdate(x.due)+')</span>':''}</span><button class="cam" style="padding:4px 10px;min-height:32px" data-act="dvdone" data-pid="${x.p.id}" data-id="${x.id}">Reçu</button></div>`).join('')}</div>`;
+}
+A.dvdone=t=>{const p=S.pours.find(x=>x.id===t.dataset.pid);if(!p)return;p.deliv=p.deliv||{};p.deliv[t.dataset.id]=true;saveLS();render()};
+// ---- sauvegarde / restauration ----
+async function getDl(){let dl=null;try{if(typeof claude!=='undefined')dl=await claude.use('downloads')}catch(e){}return dl||{save:saveBlob}}
+A.backup=async t=>{
+ try{const data={v:1,at:new Date().toISOString(),pours:S.pours,photos:PH};
+  const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
+  const dl=await getDl();await dl.save({filename:`Sauvegarde_journal_coulage_${today()}.json`,data:blob});toast('Sauvegarde créée')}
+ catch(e){if(!e||e.code!=='declined')toast('Sauvegarde impossible : '+(e&&e.message||'erreur'))}};
+A.restore=()=>{const inp=document.createElement('input');inp.type='file';inp.accept='.json,application/json';
+ inp.onchange=async()=>{const f=inp.files&&inp.files[0];if(!f)return;
+  try{const d=JSON.parse(await f.text());if(!d||!Array.isArray(d.pours))throw 0;
+   let n=0;d.pours.forEach(p=>{if(!S.pours.some(x=>x.id===p.id)){S.pours.push(p);n++}});
+   Object.entries(d.photos||{}).forEach(([id,u])=>{if(!PH[id]){PH[id]=u;idbPut(id,u)}});
+   saveLS();render();toast(n+' fiche(s) restaurée(s)')}catch(e){toast('Fichier de sauvegarde illisible')}};
+ inp.click()};
+// ---- météo du site (nécessite le réseau) ----
+async function wxFetch(p){
+ const g=p.geo||{};if(!(num(g.lat)!=null&&num(g.lon)!=null))throw new Error('Renseignez les coordonnées du site (réglages)');
+ const u=`https://api.open-meteo.com/v1/forecast?latitude=${g.lat}&longitude=${g.lon}&current=temperature_2m,precipitation&daily=temperature_2m_min,temperature_2m_max,precipitation_sum&timezone=auto&past_days=1&forecast_days=1`;
+ const r=await fetch(u);if(!r.ok)throw new Error('Météo indisponible');return r.json();
+}
+A.wxnow=async()=>{try{const j=await wxFetch(P());$('#t-v').value=String(Math.round(j.current.temperature_2m*10)/10);toast('Météo du site : '+j.current.temperature_2m+' °C')}catch(e){toast(e.message==='Failed to fetch'?'Météo indisponible (réseau)':e.message)}};
+A.wxday=async t=>{try{const p=P(),j=await wxFetch(p),id=t.dataset.id,s=stOf(p,id),i=j.daily.time.length-1;
+  s.v1=String(Math.round(j.daily.temperature_2m_min[i]*10)/10);s.v2=String(Math.round(j.daily.temperature_2m_max[i]*10)/10);
+  s.obs=((s.obs||'').trim()+` Météo (Open-Meteo, coordonnées du site) : pluie ${j.daily.precipitation_sum[i]} mm.`).trim();saveLS();render();toast('T° min / max du jour reprises')}catch(e){toast(e.message==='Failed to fetch'?'Météo indisponible (réseau)':e.message)}};
+A.geoloc=()=>{if(!navigator.geolocation){toast('Position indisponible');return}
+ navigator.geolocation.getCurrentPosition(pos=>{const p=P();p.geo={lat:pos.coords.latitude.toFixed(4),lon:pos.coords.longitude.toFixed(4)};saveLS();$('#g-la').value=p.geo.lat;$('#g-lo').value=p.geo.lon;toast('Position du site enregistrée')},()=>toast('Position refusée'),{timeout:8000})};
+A.geo=t=>{const p=P();p.geo=p.geo||{};p.geo[t.dataset.k]=t.value.trim();saveLS()};
 
 async function saveBlob(o){
  const f=new File([o.data],o.filename,{type:o.data.type});
