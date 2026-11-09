@@ -4,15 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <title>Journal de coulage · Exemple Gouzeaucourt</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Coulage WTG">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#001A70">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0A0E22" media="(prefers-color-scheme: dark)">
 <style>
 /* Layout: one-column phone app. White EDF header with orange rule, scrolling view, navy 5-tab bar, bottom sheets for forms.
    Identity from the EDF power solutions templates: Arial, navy #001A70, blue #1057C8, orange #FE5815, light grey #F8F7F7. */
@@ -38,12 +38,12 @@
 *{box-sizing:border-box}
 html,body{height:100%}
 body{background:var(--bg);color:var(--ink);font:15px/1.4 var(--f);padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px))}
-#app{max-width:600px;margin:0 auto;height:100%;display:flex;flex-direction:column;position:relative;background:var(--bg)}
+#app{max-width:600px;margin:0 auto;height:100%;height:100dvh;display:flex;flex-direction:column;position:relative;background:var(--bg)}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:3px solid var(--brand);outline-offset:2px}
 .mono{font-variant-numeric:tabular-nums}
-.top{background:var(--bar);color:var(--bar-ink);border-bottom:3px solid var(--accent);padding:9px max(14px,env(safe-area-inset-left,0px)) 9px max(14px,env(safe-area-inset-right,0px));display:flex;align-items:center;gap:10px;flex:none}
+.top{background:var(--bar);color:var(--bar-ink);border-bottom:3px solid var(--accent);padding:calc(9px + env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-left,0px)) 9px max(14px,env(safe-area-inset-right,0px));display:flex;align-items:center;gap:10px;flex:none}
 .top h1{font:700 19px/1.1 var(--f);margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .top h1 small{display:block;font:400 11px/1.3 var(--f);opacity:.75;margin-top:3px;overflow:hidden;text-overflow:ellipsis}
 select{text-overflow:ellipsis;min-width:0;max-width:100%}
@@ -190,7 +190,7 @@ const CHECKS=[
   ['c8','Pente vers l’extérieur, hors virole / cage d’ancrage','Pente 1 %',['Vis'],'r',''],
   ['c9','Pente vers le fourreau déshumidificateur (si prévu)','Pente 1 %',['Vis'],'',''],
   ['c10','Arête chanfreinée en partie supérieure du socle','',['Vis'],'o',''],
-  ['c11','Surface du fût lisse et propre (adhérence de l’étanchéité) ; finition par plaques vibrantes uniquement','Vibration manuelle proscrite',['Vis'],'r',''],
+  ['c11','Surface du fût lisse et propre (adhérence de l’étanchéité) ; méthode de finition à indiquer','Surface lisse, propre, sans laitance ni cure incompatible avec l’étanchéité',['Vis'],'r','finish'],
   ['c12','Graisse et capuchons de protection posés sur les tiges d’ancrage','Protections provisoires conservées jusqu’au décoffrage',['Vis'],'o','']]],
  ['Cure & suivi thermique',[
   ['c13','Produit de cure appliqué sur toute la partie supérieure','NF P 11-213 · validé par le BCT avant le 1er coulage',['Vis'],'r',''],
@@ -207,6 +207,7 @@ const CHECKS=[
   ['c22','Tableau de suivi du bétonnage complet et transmis','≤ 48 h après le coulage',['Doc'],'',''],
   ['c23','Contrôle géomètre de la cage d’ancrage après bétonnage commandé (planéité, altimétrie)','Géomètre expert externe, avant et après bétonnage · FO09 §5.16',['Doc'],'','']]]
 ];
+const FINISH=['Plaque vibrante','Règle vibrante','Talochage manuel','Lissage mécanique (hélicoptère)','Autre (à préciser en observation)'];
 const ALL=[...GATE,...CHECKS.flatMap(s=>s[1])];
 const ITEM=Object.fromEntries(ALL.map(i=>[i[0],i]));
 const CENTRALES_NONE='';
@@ -215,7 +216,7 @@ const DELIV=[['d1','Bons de livraison du béton (copie)',2,'CCTP §7.11.5 · FO0
 const ROLES=[['ent','Entreprise'],['moe','Maître d’Œuvre'],['bct','Bureau de Contrôle Technique'],['lab','Laboratoire'],['moa','EDF Power Solutions (si PA)']];
 // Thresholds default to CCTP lot fondation (§7.11) ; editable per pour
 const DEF_TH={flow:70,dt:90,gap:15,slumpMin:100,slumpMax:150,tmin:5,tmax:25,every:3,seriesN:8,seriesTot:8,coreMax:65,dTmax:20};
-const SRC={'':'Constaté sur place',lab:'Déclaré par le laboratoire',ent:'Déclaré par l’Entreprise',moe:'Déclaré par le MOE',bl:'Repris des bons de livraison'};
+const SRC={'':'Constaté sur place',lab:'Déclaré par le laboratoire',ent:'Déclaré par l’Entreprise',entph:'Photos transmises par l’Entreprise',moe:'Déclaré par le MOE',bl:'Repris des bons de livraison'};
 const srcOpts=v=>Object.entries(SRC).map(([k,l])=>`<option value="${k}"${(v||'')===k?' selected':''}>${l}</option>`).join('');
 const MIXES={assiette:'Assiette + décaissé · CEM III C35/40 XC4 XF1 XA1',fut:'Fût · CEM III C40/50 XC4 XF3 XA1'};
 
@@ -246,7 +247,7 @@ function idbOpen(){return new Promise(res=>{try{const r=indexedDB.open('journal-
 function idbPut(id,v){try{if(!idb)return;idb.transaction('p','readwrite').objectStore('p').put(v,id)}catch(e){}}
 function idbDel(id){try{if(!idb)return;idb.transaction('p','readwrite').objectStore('p').delete(id)}catch(e){}}
 function idbLoadAll(){return new Promise(res=>{try{if(!idb)return res();const rq=idb.transaction('p').objectStore('p').openCursor();rq.onsuccess=()=>{const c=rq.result;if(c){PH[c.key]=c.value;c.continue()}else res()};rq.onerror=()=>res()}catch(e){res()}})}
-const P=()=>S.pours.find(p=>p.id===S.cur);
+const P=()=>{const p=S.pours.find(p=>p.id===S.cur);if(p&&typeof syncExtra==='function')syncExtra(p);return p};
 
 // ---------- model ----------
 const cenList=p=>(p.centrales||'').split(/[,;]/).map(x=>x.trim()).filter(Boolean);
@@ -359,6 +360,7 @@ function phList(p){
   add(st.ph,i[0]+' · '+i[1],sc,st.s==='nok'?'NC':(i[0][0]==='g'?'Prérequis':'Contrôle'))});
  p.trucks.forEach((t,k)=>{const fl=truckFlags(p,t,k).length;add(t.ph,'Toupie '+t.n+' · BL '+(t.bl||'–'),fl?85:(k===0?60:35),fl?'NC':'Toupie')});
  add((p.lab||{}).ph,'Registre du laboratoire (document)',200,'Registre labo');
+ (p.freePh||[]).forEach(id=>{if(PH[id])out.push({id,label:(p.freeCap&&p.freeCap[id])||'Photo supplémentaire',score:60,cat:'Libre',ord:ord++})});
  p.inc.forEach(x=>add(x.ph,'Incident '+x.t+' · '+x.cause,x.nc?100:75,x.nc?'NC':'Incident'));
  // automatic choice: best scores, at most 4 photos of non-conformity-free trucks, ties keep chronological order
  const ranked=[...out].sort((a,b)=>b.score-a.score||a.ord-b.ord);let tr=0;
@@ -366,6 +368,30 @@ function phList(p){
  const sel=p.phSel||{};
  out.forEach(x=>{x.auto=auto.has(x.id);x.on=sel[x.id]!==undefined?sel[x.id]:x.auto});
  return out;
+}
+
+// volume / trucks per concrete plant: from the truck log, or from the lab register when the lab totals are entered per plant
+function cenTotals(p){
+ const lc=(p.lab&&p.lab.cen)||{};
+ return cenList(p).map(c=>{
+  const v=p.trucks.filter(t=>t.centrale===c&&t.status!=='rej');
+  const tv=v.reduce((a,t)=>a+(num(t.vol)||0),0),l=lc[c]||{};
+  const ln=num(l.n),lv=num(l.vol);
+  return (lv!=null&&lv>=tv)?{c,n:ln!=null?ln:v.length,vol:lv,lab:true}:{c,n:v.length,vol:tv,lab:false}});
+}
+
+// ---------- points supplémentaires (ajoutés par l’inspecteur pour ce coulage) ----------
+const XSEC='Points supplémentaires';
+let XSYNC={id:null,n:-1};
+function syncExtra(p){
+ const n=(p.extra||[]).length;if(XSYNC.id===p.id&&XSYNC.n===n)return;
+ // remove the previous pour's extras from the shared lists
+ [GATE,ALL].forEach(a=>{for(let k=a.length-1;k>=0;k--)if(a[k][6]==='x'){delete ITEM[a[k][0]];a.splice(k,1)}});
+ const ci=CHECKS.findIndex(c=>c[0]===XSEC);if(ci>=0){CHECKS[ci][1].forEach(i=>{delete ITEM[i[0]];const k=ALL.indexOf(i);if(k>=0)ALL.splice(k,1)});CHECKS.splice(ci,1)}
+ const gx=[],cx=[];
+ (p.extra||[]).forEach(x=>{const it=[x.id,x.text,x.req||'',['Sup.'],x.photo?'r':'o',x.pa?'pa':'','x'];ITEM[x.id]=it;ALL.push(it);(x.id[0]==='g'?GATE:cx).push(it);if(x.id[0]==='g')gx.push(it)});
+ if(cx.length)CHECKS.push([XSEC,cx]);
+ XSYNC={id:p.id,n};
 }
 
 // ---------- shell render ----------
@@ -415,7 +441,7 @@ A.new=()=>{
  <div class="grid2"><label class="f">Date du coulage<input class="in" type="date" id="n-date" value="${today()}"></label><label class="f">Rédacteur<input class="in" id="n-dr" value="${esc(l.drafter||'Daniel Mocanu')}"></label></div>
  <h3>Centrales à béton</h3>
  <div class="grid2"><label class="f">Centrale 1<input class="in" id="n-c1" value="${esc(cl[0]||'Centrale 1')}"></label><label class="f">Centrale 2<input class="in" id="n-c2" value="${esc(cl[1]||'Centrale 2')}"></label></div>
- <label class="f">Centrale 3 (si besoin)<input class="in" id="n-c3" value="${esc(cl[2]||'')}" placeholder="optionnelle"></label>
+ <label class="f">Centrale 3 (secours, si besoin)<input class="in" id="n-c3" value="${esc(cl[2]||'')}" placeholder="optionnelle"></label>
  <div class="grid2"><label class="f">Volume assiette + décaissé (m³)<input class="in" id="n-va" inputmode="decimal"></label><label class="f">Volume fût (m³)<input class="in" id="n-vf" inputmode="decimal"></label></div>
   <div class="row sf"><button class="btn sec grow" data-act="close">Annuler</button><button class="btn grow" data-act="create">Créer</button></div>`);
  $('#n-model').onchange=e=>{if(e.target.value==='gouz')$('#n-proj').value='Gouzeaucourt (59)'};
@@ -434,6 +460,7 @@ function itemCard(p,i){
  let extra='';
  if(kind==='temp')extra=`<div class="grid2"><label class="f">T° ext min (°C)<input class="in" inputmode="decimal" data-chg="fld" data-id="${id}" data-k="v1" value="${esc(s.v1??'')}"></label><label class="f">T° ext max (°C)<input class="in" inputmode="decimal" data-chg="fld" data-id="${id}" data-k="v2" value="${esc(s.v2??'')}"></label></div>`;
  if(kind==='thermal')extra=`<div class="grid2"><label class="f">T max cœur (°C)<input class="in" inputmode="decimal" data-chg="thm" data-k="tmax" value="${esc(p.thermal.tmax)}"></label><label class="f">ΔT cœur / peau (°C)<input class="in" inputmode="decimal" data-chg="thm" data-k="dT" value="${esc(p.thermal.dT)}"></label></div>`;
+ if(kind==='finish')extra=`<label class="f">Méthode de finition<select class="in" data-chg="fld" data-id="${id}" data-k="meth"><option value="">À choisir</option>${FINISH.map(o=>`<option${s.meth===o?' selected':''}>${esc(o)}</option>`).join('')}</select></label>`;
  const nokNoObs=(s.s==='nok'||s.s==='na')&&!(s.obs||'').trim();
  return `<div class="item${s.s?' s-'+s.s:''}"><div><p>${esc(text)}</p>${req?`<div class="req">${esc(req)}</div>`:''}</div>
  <div class="row wrap" style="gap:5px">${i[5]==='pa'?'<span class="pill pa">POINT D’ARRÊT</span>':''}${tags.map(t=>`<span class="pill tag">${t}</span>`).join('')}${ph==='r'?'<span class="pill warn">PHOTO REQUISE</span>':''}</div>
@@ -441,7 +468,7 @@ function itemCard(p,i){
  <div class="seg" role="group" aria-label="Statut">${[['ok','OUI'],['nok','NON'],['na','NA']].map(([v,l])=>`<button data-act="set" data-id="${id}" data-v="${v}" aria-pressed="${s.s===v}">${l}</button>`).join('')}</div>
  ${s.s?`<select class="in" style="min-height:38px;font:400 13px var(--f)" data-chg="isrc" data-id="${id}" aria-label="Source de l’information">${srcOpts(s.src)}</select>`:''}
  ${(s.s==='nok'||s.s==='na'||s.obs)?`<label class="f">Observation${nokNoObs?' · obligatoire (NON / NA)':''}<textarea class="in" data-chg="obs" data-id="${id}" ${nokNoObs?'style="border-color:var(--nok)"':''}>${esc(s.obs||'')}</textarea></label>`:''}
- <div class="row wrap">${thumbs(s.ph)}<button class="cam${need?' need':''}" data-act="shot" data-id="${id}">${ICON.cam}${s.ph&&s.ph.length?'Ajouter':'Photo'}</button>${s.s?'':`<button class="cam" style="border-style:solid;border-color:var(--line);color:var(--mut)" data-act="note" data-id="${id}">Note</button>`}</div></div>`;
+ <div class="row wrap">${thumbs(s.ph)}<button class="cam${need?' need':''}" data-act="shot" data-id="${id}">${ICON.cam}${s.ph&&s.ph.length?'Ajouter':'Photo'}</button>${s.s?'':`<button class="cam" style="border-style:solid;border-color:var(--line);color:var(--mut)" data-act="note" data-id="${id}">Note</button>`}</div>${i[6]==='x'?`<button class="cam" style="border-style:solid;border-color:var(--line);color:var(--nok);align-self:flex-start" data-act="xdel" data-id="${id}">Supprimer ce point</button>`:''}</div>`;
 }
 A.set=t=>{const p=P(),id=t.dataset.id,i=ITEM[id],s=stOf(p,id),v=t.dataset.v;
  if(s.s===v){delete s.s}else{
@@ -455,7 +482,7 @@ A.obs=t=>{stOf(P(),t.dataset.id).obs=t.value;saveLS();later()};
 A.note=t=>{const s=stOf(P(),t.dataset.id);s.obs=s.obs||' ';saveLS();render()};
 A.shot=t=>{const p=P(),id=t.dataset.id,s=stOf(p,id);pickPhoto(id+' '+ITEM[id][1].slice(0,38),pid=>{(s.ph=s.ph||[]).push(pid)})};
 A.viewph=t=>{const id=t.dataset.id;openSheet(`<img src="${PH[id]}" alt="Photo" style="width:100%;border-radius:8px"><div class="row sf"><button class="btn red grow" data-act="delph" data-id="${id}">Supprimer</button><button class="btn sec grow" data-act="close">Fermer</button></div>`)};
-A.delph=t=>{const id=t.dataset.id,p=P();const arrs=[];ALL.forEach(i=>{const s=itemState(p,i[0]);if(s.ph)arrs.push(s.ph)});p.trucks.forEach(x=>x.ph&&arrs.push(x.ph));p.inc.forEach(x=>x.ph&&arrs.push(x.ph));if(p.lab&&p.lab.ph)arrs.push(p.lab.ph);arrs.forEach(a=>{if(a.includes(id))rmPhoto(a,id)});closeSheet();render()};
+A.delph=t=>{const id=t.dataset.id,p=P();const arrs=[];ALL.forEach(i=>{const s=itemState(p,i[0]);if(s.ph)arrs.push(s.ph)});if(p.freePh)arrs.push(p.freePh);p.trucks.forEach(x=>x.ph&&arrs.push(x.ph));p.inc.forEach(x=>x.ph&&arrs.push(x.ph));if(p.lab&&p.lab.ph)arrs.push(p.lab.ph);arrs.forEach(a=>{if(a.includes(id))rmPhoto(a,id)});closeSheet();render()};
 
 // ---------- Prérequis (go / no-go) ----------
 function gateView(p){
@@ -465,6 +492,7 @@ function gateView(p){
   `<div class="alert ${pa.length?'nok':'warn'}"><div><b>${open.length} point(s) à lever</b>${pa.length?` dont ${pa.length} point(s) d’arrêt`:''}. Le coulage ne démarre qu’avec l’accord du MOE.</div></div>`);
  return `<h2>Prérequis avant coulage</h2><p class="small mut" style="margin:0">Levée des points d’arrêt · CCTP §7.11.4 et fiche 9</p>${verdict}
  ${GATE.map(i=>itemCard(p,i)).join('')}
+ <button class="btn ghost full" data-act="xadd" data-sec="g">＋ Ajouter un prérequis</button>
  ${p.go?`<button class="btn sec full" data-act="revokego">Retirer l’autorisation</button>`:`<button class="btn full" data-act="gosheet">Enregistrer l’accord du MOE</button>`}`;
 }
 A.gosheet=()=>{const p=P(),open=gateOpen(p);
@@ -478,8 +506,33 @@ A.revokego=()=>{P().go=null;saveLS();render()};
 function checksView(p){
  const pr=progress(p);
  return `<h2>Contrôles pendant le coulage</h2><div class="card"><div class="row"><div class="grow small mut mono">${pr.c[0]} / ${pr.c[1]} points renseignés</div></div><div class="bar" style="margin-top:6px"><i style="width:${pr.c[1]?pr.c[0]/pr.c[1]*100:0}%"></i></div></div>
- ${CHECKS.map(([t,items])=>`<h3>${t}</h3>${items.map(i=>itemCard(p,i)).join('')}`).join('')}`;
+ ${CHECKS.map(([t,items])=>`<h3>${t}</h3>${t.startsWith('Finition')?finishHint(p,items):''}${items.map(i=>itemCard(p,i)).join('')}`).join('')}
+ <button class="btn ghost full" data-act="xadd" data-sec="c">＋ Ajouter un point de contrôle</button>`;
 }
+
+// finishing is often done after the inspector has left: one tap sets the source of every still-open finishing item
+function finishHint(p,items){
+ const open=items.filter(i=>!itemState(p,i[0]).s).length;
+ return `<div class="card small" style="display:flex;flex-direction:column;gap:8px"><div>Vous avez quitté le chantier avant la fin de la finition ? Demandez à l’Entreprise des photos de la surface, des pentes et du chanfrein, puis renseignez chaque point en choisissant la source « Photos transmises par l’Entreprise » ou « Déclaré par l’Entreprise ». Le rapport l’indique.</div>
+ ${open?`<button class="btn ghost full" data-act="finent">Renseigner « Photos transmises par l’Entreprise » sur les ${open} points ouverts</button>`:''}</div>`;
+}
+A.finent=()=>{const p=P();CHECKS.filter(c=>c[0].startsWith('Finition')).forEach(c=>c[1].forEach(i=>{const s=stOf(p,i[0]);if(!s.s)s.src='entph'}));saveLS();toast('Source définie : choisissez OUI / NON pour chaque point');render()};
+
+// ---------- add / remove extra points ----------
+A.xadd=t=>{const g=t.dataset.sec==='g';
+ openSheet(`<h2>${g?'Nouveau prérequis':'Nouveau point de contrôle'}</h2>
+ <label class="f">Point à vérifier<textarea class="in" id="x-t" placeholder="Ex. Gaine de passage de câbles dégagée"></textarea></label>
+ <label class="f">Exigence / tolérance (facultatif)<input class="in" id="x-r"></label>
+ ${g?'<label class="row" style="gap:8px"><input type="checkbox" id="x-pa" style="width:22px;height:22px"> Point d’arrêt</label>':''}
+ <label class="row" style="gap:8px"><input type="checkbox" id="x-ph" style="width:22px;height:22px"> Photo requise</label>
+ <div class="row sf"><button class="btn sec grow" data-act="close">Annuler</button><button class="btn grow" data-act="xsave" data-sec="${g?'g':'c'}">Ajouter</button></div>`)};
+A.xsave=t=>{const p=P(),txt=$('#x-t').value.trim();if(!txt){toast('Saisissez le point à vérifier');return}
+ p.extra=p.extra||[];const g=t.dataset.sec==='g';
+ const n=1+Math.max(0,...p.extra.map(x=>parseInt(x.id.slice(2))||0));
+ p.extra.push({id:(g?'gx':'cx')+n,text:txt,req:$('#x-r').value.trim(),pa:g&&$('#x-pa')&&$('#x-pa').checked,photo:$('#x-ph').checked});
+ closeSheet();saveLS();render()};
+A.xdel=t=>openSheet(`<h2>Supprimer ce point ?</h2><p class="small mut" style="margin:0">Le point, son statut et ses observations seront retirés de la fiche.</p><div class="row sf"><button class="btn sec grow" data-act="close">Annuler</button><button class="btn red grow" data-act="xdel2" data-id="${t.dataset.id}">Supprimer</button></div>`);
+A.xdel2=t=>{closeSheet();const p=P(),id=t.dataset.id;p.extra=(p.extra||[]).filter(x=>x.id!==id);(id[0]==='g'?p.gate:p.chk)[id]&&delete (id[0]==='g'?p.gate:p.chk)[id];saveLS();render()};
 
 // ---------- Coulage (live log) ----------
 function pourView(p){
@@ -489,7 +542,7 @@ function pourView(p){
   const open=gateOpen(p).length;
   return `<h2>Coulage</h2><div class="card" style="display:flex;flex-direction:column;gap:10px"><div>${p.go?`<span class="pill ok">AUTORISÉ ${p.go.at}</span>`:`<span class="pill ${open?'warn':'na'}">${open?open+' PRÉREQUIS OUVERTS':'ACCORD MOE À ENREGISTRER'}</span>`}</div>
   <div class="small mut">Démarrez le journal à l’arrivée de la première toupie. Les écarts (délai, affaissement, cadence) sont calculés au fil des saisies.</div>
-  ${labCard(p)}
+  ${labCard(p)}${freeCard(p)}
   <button class="btn full" data-act="start">Démarrer le coulage</button><button class="btn ghost full" data-act="pres">${p.pres.from?'Ma présence : '+p.pres.from+' → '+(p.pres.to||'…'):'Ma présence sur site'}</button></div>
   <div class="card small"><b>Seuils appliqués</b><div class="mono mut" style="margin-top:4px">Débit ≥ ${th.flow} m³/h · chargement → mise en place ≤ ${hm(th.dt)} · écart toupies ≤ ${th.gap} min · affaissement ${th.slumpMin}–${th.slumpMax} mm · essai toutes les ${th.every} toupies</div></div>
   <h3>Mélanges</h3><div class="card small mono">${MIXES.assiette}<br>${MIXES.fut}</div>`;
@@ -507,11 +560,11 @@ function pourView(p){
  return `<h2>Coulage en cours</h2>
  <div class="kpis"><div class="kpi"><b>${f1(s.vol)}</b><span>m³ coulés${s.plan?' / '+f1(s.plan):''}</span></div><div class="kpi ${flowCls}"><b>${f1(s.flow)}</b><span>m³/h moyen</span></div><div class="kpi"><b>${s.n}</b><span>toupies${s.rej?' · '+s.rej+' rej.':''}</span></div></div>
  ${s.plan?`<div><div class="bar"><i style="width:${pct}%"></i></div><div class="small mut mono" style="margin-top:4px">Reste ${f1(s.left)} m³${s.eta!=null?' · fin estimée dans '+hm(s.eta):''} · début ${p.start}${p.startSrc?' ('+SRC[p.startSrc].toLowerCase()+')':''}${p.end?' · fin '+p.end+(p.endSrc?' ('+SRC[p.endSrc].toLowerCase()+')':''):''}</div></div>`:`<div class="small mut mono">Début ${p.start}${p.end?' · fin '+p.end:''}${s.el!=null?' · durée '+hm(s.el):''}</div>`}
- ${cenList(p).length>1&&p.trucks.length?`<div class="card small mono">${cenList(p).map(c=>{const v=p.trucks.filter(t=>t.centrale===c&&t.status!=='rej');return esc(c)+' : <b>'+f1(v.reduce((a,t)=>a+(num(t.vol)||0),0))+' m³</b> · '+v.length+' toupies'}).join('<br>')}</div>`:''}
+ ${cenList(p).length>1&&cenTotals(p).some(x=>x.n||x.vol)?`<div class="card small mono">${cenTotals(p).map(x=>esc(x.c)+' : <b>'+f1(x.vol)+' m³</b> · '+x.n+' toupies'+(x.lab?' (registre labo)':'')).join('<br>')}</div>`:''}
  ${alerts.map(a=>`<div class="alert ${a[0]}"><div>${esc(a[1])}</div></div>`).join('')}
- ${labCard(p)}
+ ${labCard(p)}${freeCard(p)}
  <button class="btn ghost full" data-act="pres">${p.pres.from?'Ma présence : '+p.pres.from+' → '+(p.pres.to||'…'):'Ma présence sur site'}</button>
- ${p.end?'':`<button class="btn full" data-act="truck">＋ Toupie n° ${nextN}</button>
+ ${p.end?'':`<button class="btn ghost full" data-act="truck">＋ Constat sur une toupie (facultatif)</button>
  <div class="grid2"><button class="btn ghost" data-act="tlog">T° ext.${lt?' '+lt.v+' °C':''}</button><button class="btn ghost" data-act="inc">Incident</button></div>`}
  <h3>Toupies</h3>
  ${p.trucks.length?[...p.trucks].reverse().map(t=>truckRow(p,t)).join(''):'<p class="mut small">Aucune toupie saisie.</p>'}
@@ -600,20 +653,28 @@ A.savetruck=()=>{const p=P();if(num(D.vol)==null){toast('Indiquez le volume de l
 function seriesView(p){
  const th=p.th,done=p.series.filter(Boolean).length,d0=p.date;
  return `<h2>Éprouvettes</h2><div class="card"><div class="row"><div class="grow"><b style="font:700 26px var(--f);color:var(--head)">${done} / ${p.series.length}</b> <span class="small mut mono">séries prélevées</span></div></div><div class="bar" style="margin-top:6px"><i style="width:${done/p.series.length*100}%"></i></div></div>
- <div class="series">${p.series.map((x,i)=>`<button class="${x?'done':''}" data-act="serie" data-i="${i}"><b>${i+1}</b><span class="small mono">${x?(x.el==='fut'?'fût':'ass. + déc.'):'à faire'}</span><span class="small mono mut">${x?'BL '+esc(x.bl||'–'):''}</span></button>`).join('')}</div>
- <div class="card small"><b>Par série : 8 éprouvettes</b><div class="mono mut" style="margin-top:4px">1 à 7 j · 1 à 14 j · 3 à 28 j · 3 en réserve 1 an<br>Étiquette : n° d’éolienne · centrale · n° de BL</div></div>
- <h3>Échéancier des écrasements</h3>
- <div class="card"><table class="mono small" style="width:100%"><tr><td>7 jours</td><td><b>${fdate(addDays(d0,7))}</b></td></tr><tr><td>14 jours</td><td><b>${fdate(addDays(d0,14))}</b></td></tr><tr><td>28 jours</td><td><b>${fdate(addDays(d0,28))}</b></td></tr><tr><td>Réserve (1 an)</td><td><b>${fdate(addDays(d0,365))}</b></td></tr></table><div class="small mut" style="margin-top:6px">Résultats transmis au MOE sous 2 jours après chaque essai.</div></div>
+ <div class="series">${p.series.map((x,i)=>`<button class="${x?'done':''}" data-act="serie" data-i="${i}"><b>${i+1}</b><span class="small mono">${x?(x.el==='fut'?'fût':'ass. + déc.'):'à faire'}</span><span class="small mono mut">${x?'BL '+esc(x.bl||'–'):''}</span>${x?`<span class="small mono mut">${eprN(x)} épr.</span>`:''}</button>`).join('')}</div>
+ <div class="card small"><b>Éprouvettes : nombre et âges libres, série par série</b><div class="mono mut" style="margin-top:4px">Ouvrez une série pour fixer le nombre d’éprouvettes par échéance (7, 14, 28 jours, réserve…).<br>Étiquette : n° d’éolienne · centrale · n° de BL</div></div>
+ <h3>Échéancier des écrasements</h3>${echeancier(p)}
  <div class="alert warn"><div>Répartition CCTP : 1 série pour le fût et 7 séries pour l’assiette non déjaugée (9 si déjaugée). Le CCTP et la check-list citent aussi « 8 séries » : ajustez le nombre de séries dans les réglages si besoin.</div></div>`;
 }
 A.serie=t=>{const p=P(),i=parseInt(t.dataset.i),x=p.series[i]||{el:'assiette',bl:'',centrale:'',time:nowT()};
- DN={i,...x};if(!DN.centrale)DN.centrale=cenList(p)[0]||'';
+ const prev=[...p.series].reverse().find(y=>y&&y.eprs);
+ DN={i,...x,eprs:JSON.parse(JSON.stringify(x.eprs||(prev&&prev.eprs)||EPR_DEF))};if(!DN.centrale)DN.centrale=cenList(p)[0]||'';
+ serieSheet()};
+function serieSheet(){const p=P(),x=DN,i=DN.i;
  openSheet(`<h2>Série ${i+1}</h2><div class="card mono" style="font-size:15px">WTG ${esc(p.wtg)} · ${esc(x.centrale||'centrale')} · BL ${esc(x.bl||'…')} · S${i+1}</div>
  <div class="grid2"><label class="f">Élément<select class="in" data-chg="sb" data-k="el"><option value="assiette"${x.el==='assiette'?' selected':''}>Assiette + décaissé</option><option value="fut"${x.el==='fut'?' selected':''}>Fût</option></select></label><label class="f">N° BL<input class="in" data-chg="sb" data-k="bl" value="${esc(x.bl)}"></label></div>
  <label class="f">Centrale${cenSelect(p,x.centrale||cenList(p)[0]||'','data-chg="sb" data-k="centrale"')}</label>
- <div class="row sf"><button class="btn red grow" data-act="delserie">Vider</button><button class="btn grow" data-act="saveserie">Enregistrer</button></div>`)};
+ <b class="small">Éprouvettes de cette série : ${eprN(x)}</b>
+ ${x.eprs.map((e,k)=>`<div class="grid3" style="align-items:end"><label class="f">Âge<select class="in" data-chg="ea" data-k="${k}">${AGES.map(([v,l])=>`<option value="${v}"${e.a===v?' selected':''}>${l}</option>`).join('')}</select></label><label class="f">Nombre<input class="in" inputmode="numeric" data-chg="en" data-k="${k}" value="${esc(e.n)}"></label><label class="f">MPa<input class="in" inputmode="decimal" data-chg="er" data-k="${k}" value="${esc(e.r||'')}" placeholder="résultat"></label></div>`).join('')}
+ <div class="row wrap"><button class="btn ghost" data-act="eadd">＋ Échéance</button>${x.eprs.length>1?'<button class="btn ghost" data-act="edel">− Dernière</button>':''}</div>
+ <div class="row sf"><button class="btn red grow" data-act="delserie">Vider</button><button class="btn grow" data-act="saveserie">Enregistrer</button></div>`)}
+A.ea=t=>{DN.eprs[+t.dataset.k].a=t.value};A.en=t=>{DN.eprs[+t.dataset.k].n=t.value};A.er=t=>{DN.eprs[+t.dataset.k].r=t.value};
+A.eadd=()=>{const used=DN.eprs.map(e=>e.a),nx=AGES.find(([v])=>!used.includes(v));DN.eprs.push({a:nx?nx[0]:'28',n:'1',r:''});serieSheet()};
+A.edel=()=>{DN.eprs.pop();serieSheet()};
 A.sb=t=>{DN[t.dataset.k]=t.value};
-A.saveserie=()=>{const p=P();p.series[DN.i]={el:DN.el,bl:DN.bl,centrale:DN.centrale,time:DN.time||nowT(),truck:DN.truck||null};closeSheet();saveLS();render()};
+A.saveserie=()=>{const p=P();p.series[DN.i]={el:DN.el,bl:DN.bl,centrale:DN.centrale,time:DN.time||nowT(),truck:DN.truck||null,eprs:DN.eprs.filter(e=>num(e.n)>0)};closeSheet();saveLS();render()};
 A.delserie=()=>{P().series[DN.i]=null;closeSheet();saveLS();render()};
 
 // ---------- NC sheet and settings ----------
@@ -624,7 +685,7 @@ A.settings=()=>{const p=P(),th=p.th;
  <div class="grid2"><label class="f">Projet<input class="in" data-chg="sp" data-k="project" value="${esc(p.project)}"></label><label class="f">N° éolienne<input class="in" data-chg="sp" data-k="wtg" value="${esc(p.wtg)}"></label></div>
  <div class="grid2"><label class="f">Date<input class="in" type="date" data-chg="sp" data-k="date" value="${p.date}"></label><label class="f">Rédacteur<input class="in" data-chg="sp" data-k="drafter" value="${esc(p.drafter)}"></label></div>
  <div class="grid2"><label class="f">Code du document<input class="in" data-chg="sp" data-k="docCode" value="${esc(p.docCode||'EPSGR-ENG-XXxx')}"></label><label class="f">Indice de révision<input class="in" data-chg="sp" data-k="rev" value="${esc(p.rev||'00')}"></label></div>
- <h3>Centrales à béton</h3><div class="grid3">${[0,1,2].map(i=>`<label class="f">Centrale ${i+1}<input class="in" data-chg="scn" data-i="${i}" value="${esc(cenList(p)[i]||'')}"></label>`).join('')}</div>
+ <h3>Centrales à béton</h3><div class="grid3">${[0,1,2].map(i=>`<label class="f">Centrale ${i+1}${i===2?' (secours)':''}<input class="in" data-chg="scn" data-i="${i}" value="${esc(cenList(p)[i]||'')}"></label>`).join('')}</div>
  <div class="grid2"><label class="f">Volume assiette + décaissé (m³)<input class="in" inputmode="decimal" data-chg="sp" data-k="volA" value="${esc(p.volA)}"></label><label class="f">Volume fût (m³)<input class="in" inputmode="decimal" data-chg="sp" data-k="volF" value="${esc(p.volF)}"></label></div>
   <h3>Intervenants (nom · représentant sur site)</h3>
  ${ROLES.map(([k,l])=>`<div class="grid2"><label class="f">${l}<input class="in" data-chg="sc" data-r="${k}" data-k="n" value="${esc(p.contacts[k].n)}"></label><label class="f">Sur site<input class="in" data-chg="sc" data-r="${k}" data-k="r" value="${esc(p.contacts[k].r)}"></label></div>`).join('')}
@@ -644,6 +705,7 @@ function labCard(p){
  return `<div class="card" style="display:flex;flex-direction:column;gap:8px"><b style="font:700 15px var(--f);color:var(--head)">Registre du laboratoire</b>
  <div class="small mut">Le laboratoire tient la liste des toupies. Photographiez son document (une photo par page) : il est joint au rapport. Vous n’avez pas à saisir chaque toupie ; il suffit de reporter les totaux.</div>
  <div class="row wrap">${thumbs(L.ph)}<button class="cam${L.ph.length?'':' need'}" data-act="labshot">${ICON.cam}${L.ph.length?'Ajouter une page':'Photographier le document'}</button></div>
+ ${(()=>{const cs=Object.values(L.cen||{}).reduce((a,x)=>a+(num(x.vol)||0),0),tt=(num(L.vol)||0)+(num(L.volF)||0);return has&&cs&&Math.abs(cs-tt)>0.5?`<div class="alert warn"><div>Somme des centrales ${f1(cs)} m³ ≠ total ${f1(tt)} m³ : à vérifier.</div></div>`:''})()}
  ${has?`<div class="small mono">${labTxt(L)}${L.first&&L.last?' · de '+L.first+' à '+L.last:''}${L.note?'<br>'+esc(L.note):''}</div>`:'<div class="small mut">Totaux non renseignés.</div>'}
  <button class="btn ghost full" data-act="lab">${has?'Modifier les totaux':'Renseigner les totaux du document'}</button></div>`;
 }
@@ -653,15 +715,43 @@ A.lab=()=>{const p=P(),L=p.lab;openSheet(`<h2>Totaux du registre</h2><p class="s
  <b class="small">Assiette + décaissé (fiche « Massif »)</b><div class="grid2"><label class="f">Nb de toupies<input class="in" inputmode="numeric" id="l-n" value="${esc(L.n)}"></label><label class="f">Volume (m³)<input class="in" inputmode="decimal" id="l-v" value="${esc(L.vol)}"></label></div>
  <b class="small">Fût (fiche « Fût »), si coulé</b><div class="grid2"><label class="f">Nb de toupies<input class="in" inputmode="numeric" id="l-nf" value="${esc(L.nF||'')}"></label><label class="f">Volume (m³)<input class="in" inputmode="decimal" id="l-vf" value="${esc(L.volF||'')}"></label></div>
  <div class="grid2"><label class="f">1re toupie (arrivée)<input class="in" type="time" id="l-a" value="${esc(L.first)}"></label><label class="f">Dernière toupie (fin)<input class="in" type="time" id="l-b" value="${esc(L.last)}"></label></div>
+ ${cenList(p).length>1?`<b class="small">Par centrale (colonne « Centrale/BL » de la fiche)</b>${cenList(p).map((c,k)=>`<div class="grid2"><label class="f">${esc(c)}${k===2?' (secours)':''} · toupies<input class="in" inputmode="numeric" id="l-cn${k}" value="${esc(((L.cen||{})[c]||{}).n||'')}"></label><label class="f">m³<input class="in" inputmode="decimal" id="l-cv${k}" value="${esc(((L.cen||{})[c]||{}).vol||'')}"></label></div>`).join('')}`:''}
  <label class="f">Remarque<textarea class="in" id="l-c">${esc(L.note)}</textarea></label>
  <div class="row sf"><button class="btn sec grow" data-act="close">Annuler</button><button class="btn grow" data-act="dolab">Enregistrer</button></div>`)};
-A.dolab=()=>{const p=P(),L=p.lab;L.n=$('#l-n').value.trim();L.vol=$('#l-v').value.trim();L.nF=$('#l-nf').value.trim();L.volF=$('#l-vf').value.trim();L.first=$('#l-a').value;L.last=$('#l-b').value;L.note=$('#l-c').value.trim();closeSheet();saveLS();render()};
+A.dolab=()=>{const p=P(),L=p.lab;L.n=$('#l-n').value.trim();L.vol=$('#l-v').value.trim();L.nF=$('#l-nf').value.trim();L.volF=$('#l-vf').value.trim();L.first=$('#l-a').value;L.last=$('#l-b').value;L.note=$('#l-c').value.trim();L.cen={};cenList(p).forEach((c,k)=>{const n=$('#l-cn'+k),v=$('#l-cv'+k);if(n&&(n.value||v.value))L.cen[c]={n:n.value.trim(),vol:v.value.trim()}});closeSheet();saveLS();render()};
+
+// ---------- éprouvettes : nombre et âges libres par série ----------
+const AGES=[['2','2 jours'],['3','3 jours'],['7','7 jours'],['14','14 jours'],['28','28 jours'],['56','56 jours'],['90','90 jours'],['res','Réserve (1 an)']];
+const EPR_DEF=[{a:'7',n:'1',r:''},{a:'14',n:'1',r:''},{a:'28',n:'3',r:''},{a:'res',n:'3',r:''}];
+const ageDays=a=>a==='res'?365:parseInt(a);
+const ageLbl=a=>(AGES.find(x=>x[0]===a)||[a,a+' j'])[1];
+const eprN=x=>((x&&x.eprs)||EPR_DEF).reduce((a,e)=>a+(num(e.n)||0),0);
+const eprTxt=x=>((x&&x.eprs)||[]).map(e=>`${e.n}×${e.a==='res'?'rés.':e.a+' j'}${e.r?' ('+e.r+' MPa)':''}`).join(' · ')||'–';
+function echeancier(p){
+ const m={};p.series.filter(Boolean).forEach(x=>(x.eprs||EPR_DEF).forEach(e=>{m[e.a]=(m[e.a]||0)+(num(e.n)||0)}));
+ const ages=Object.keys(m).sort((a,b)=>ageDays(a)-ageDays(b));
+ if(!ages.length)return '<div class="card small mut">L’échéancier apparaît dès qu’une série est enregistrée.</div>';
+ return `<div class="card"><table class="mono small" style="width:100%">${ages.map(a=>`<tr><td>${ageLbl(a)}</td><td>${m[a]} épr.</td><td><b>${fdate(addDays(p.date,ageDays(a)))}</b></td></tr>`).join('')}</table><div class="small mut" style="margin-top:6px">Résultats transmis au MOE sous 2 jours après chaque essai.</div></div>`;
+}
+
+// ---------- photos libres (non rattachées à un point) ----------
+function freeCard(p){
+ p.freePh=p.freePh||[];p.freeCap=p.freeCap||{};
+ return `<div class="card" style="display:flex;flex-direction:column;gap:8px"><b style="font:700 15px var(--f);color:var(--head)">Photos supplémentaires</b>
+ <div class="small mut">Une photo qui ne correspond à aucun point (ambiance, matériel, météo, finition…). Ajoutez une légende : elle est reprise au rapport.</div>
+ ${p.freePh.length?`<div class="thumbs">${p.freePh.map(id=>PH[id]?`<div style="width:64px"><img src="${PH[id]}" alt="Photo" data-act="viewph" data-id="${id}" style="width:64px;height:64px;object-fit:cover;border-radius:4px"><div class="small mut" style="font-size:10px;line-height:1.2;overflow:hidden;max-height:2.4em">${esc(p.freeCap[id]||'')}</div></div>`:'').join('')}</div>`:''}
+ <div class="row wrap"><button class="cam" data-act="freeshot">${ICON.cam}Ajouter une photo</button></div></div>`;
+}
+A.freeshot=()=>{const p=P();pickPhoto('Photo',id=>{(p.freePh=p.freePh||[]).push(id);p.freeCap=p.freeCap||{};p.freeCap[id]='';XFC=id;setTimeout(()=>freeCap(),50)})};
+let XFC=null;
+function freeCap(){const p=P();if(!XFC||!PH[XFC])return;openSheet(`<h2>Légende de la photo</h2><img src="${PH[XFC]}" alt="Photo" style="width:100%;max-height:40vh;object-fit:contain;border-radius:8px"><label class="f">Légende<input class="in" id="fc-t" placeholder="Ex. Vue d’ensemble après vibration" value="${esc(p.freeCap[XFC]||'')}"></label><div class="row sf"><button class="btn sec grow" data-act="close">Plus tard</button><button class="btn grow" data-act="freecapok">Enregistrer</button></div>`)}
+A.freecapok=()=>{const p=P();p.freeCap[XFC]=$('#fc-t').value.trim();closeSheet();saveLS();render()};
 
 // ---------- Rapport ----------
 const SL={ok:'OUI',nok:'NON',na:'NA'};
 function reportModel(p){
  const s=stats(p),nc=ncList(p),pr=progress(p);
- const rows=(items)=>items.map(i=>{const st=itemState(p,i[0]);return {id:i[0],text:i[1],req:i[2],tags:i[3].join('/'),s:st.s||'',obs:((st.src?'['+SRC[st.src]+'] ':'')+(st.obs||'')).trim(),src:st.src||'',ph:st.ph||[],pa:i[5]==='pa',v:i[5]==='temp'?`T ext min ${st.v1||'–'} / max ${st.v2||'–'} °C`:(i[5]==='thermal'?`T max ${p.thermal.tmax||'–'} °C · ΔT ${p.thermal.dT||'–'} °C`:'')}});
+ const rows=(items)=>items.map(i=>{const st=itemState(p,i[0]);return {id:i[0],text:i[1],req:i[2],tags:i[3].join('/'),s:st.s||'',obs:((st.src?'['+SRC[st.src]+'] ':'')+(st.obs||'')).trim(),src:st.src||'',ph:st.ph||[],pa:i[5]==='pa',v:i[5]==='finish'?(st.meth?'Méthode : '+st.meth:'Méthode non indiquée'):i[5]==='temp'?`T ext min ${st.v1||'–'} / max ${st.v2||'–'} °C`:(i[5]==='thermal'?`T max ${p.thermal.tmax||'–'} °C · ΔT ${p.thermal.dT||'–'} °C`:'')}});
  return {s,nc,pr,gate:rows(GATE),chk:CHECKS.map(([t,it])=>({t,rows:rows(it)})),
   counts:(()=>{const c={ok:0,nok:0,na:0,todo:0};ALL.forEach(i=>{const x=itemState(p,i[0]).s;c[x||'todo']++});return c})()};
 }
@@ -748,7 +838,7 @@ async function buildDocx(p){
  out.push(new d.Table({width:{size:W,type:d.WidthType.DXA},columnWidths:[2600,5100,2600,5138],rows:Array.from({length:half},(_,i)=>new d.TableRow({children:[cell(info[i][0],2600,{bold:true,fill:'F8F7F7'}),cell(info[i][1]||'–',5100),info[i+half]?cell(info[i+half][0],2600,{bold:true,fill:'F8F7F7'}):cell('',2600),info[i+half]?cell(info[i+half][1]||'–',5138):cell('',5138)]}))}));
  out.push(h('Synthèse'));
  const c=m.counts;
- if(cenList(p).length>1)out.push(para('Volumes par centrale : '+cenList(p).map(c=>{const v=p.trucks.filter(t=>t.centrale===c&&t.status!=='rej');return `${c} ${f1(v.reduce((a,t)=>a+(num(t.vol)||0),0))} m³ (${v.length} toupies)`}).join(' · ')+'.'));
+ if(cenList(p).length>1)out.push(para('Volumes par centrale : '+cenTotals(p).map(x=>`${x.c} ${f1(x.vol)} m³ (${x.n} toupies)`).join(' · ')+'.'));
  out.push(para(`Points conformes : ${c.ok} · non conformes : ${c.nok} · sans objet : ${c.na} · non renseignés : ${c.todo} · non-conformités relevées : ${m.nc.length}.`));
  out.push(para(p.go?`Coulage autorisé par ${p.go.by} (MOE) à ${p.go.at}${p.go.open&&p.go.open.length?' avec '+p.go.open.length+' prérequis non levé(s) : '+p.go.open.join(', '):''}.`:'Aucun accord du MOE enregistré avant le coulage.',{bold:!p.go,color:p.go?undefined:'B3261E'}));
  if(p.startNoGo)out.push(para('Le coulage a démarré sans accord enregistré du MOE.',{bold:true,color:'B3261E'}));
@@ -765,7 +855,7 @@ async function buildDocx(p){
  if(p.tlog&&p.tlog.length)out.push(para('Températures extérieures : '+p.tlog.map(x=>`${x.t} ${x.v} °C`).join(' · '),{before:80}));
  if(p.inc.length){out.push(h('Interruptions et incidents'));out.push(tbl([1200,1200,10038,3000],['Heure','Durée','Cause','NC'],p.inc.map(x=>[x.t,x.dur?x.dur+' min':'',x.cause,x.nc?'Oui':'Non'])))}
  out.push(h('Éprouvettes'));
- out.push(tbl([1000,1800,2600,3000,1200,5838],['Série','Élément','Centrale','N° BL','Heure','Étiquette'],p.series.map((x,i)=>[String(i+1),x?(x.el==='fut'?'Fût':'Assiette + décaissé'):'–',x?x.centrale:'',x?x.bl:'',x?x.time:'',x?`WTG ${p.wtg} · ${x.centrale} · BL ${x.bl} · S${i+1}`:'Non prélevée'])));
+ out.push(tbl([800,1700,1900,1500,900,2000,4538,2000],['Série','Élément','Centrale','N° BL','Heure','Éprouvettes','Répartition (nombre × âge, résultat)','Étiquette'],p.series.map((x,i)=>[String(i+1),x?(x.el==='fut'?'Fût':'Assiette + décaissé'):'–',x?x.centrale:'',x?x.bl:'',x?x.time:'',x?String(eprN(x)):'',x?eprTxt(x):'Non prélevée',x?`WTG ${p.wtg} · ${x.centrale} · BL ${x.bl} · S${i+1}`:''])));
  out.push(para(`Écrasements : 7 j le ${fdate(addDays(p.date,7))} · 14 j le ${fdate(addDays(p.date,14))} · 28 j le ${fdate(addDays(p.date,28))} · 3 éprouvettes par série en réserve jusqu’au ${fdate(addDays(p.date,365))}.`,{before:80}));
  out.push(h('Livrables à suivre après coulage'));
  out.push(tbl([6200,2400,4638,1200],['Livrable','Échéance','Référence','Reçu'],DELIV.map(([id,l,n,r])=>[l,n!=null?'avant le '+fdate(addDays(p.date,n)):'selon demande',r,(p.deliv||{})[id]?'Oui':'Non'])));
@@ -864,7 +954,6 @@ const SEED=true;
  await idbOpen();await idbLoadAll();render();
 })();
 
-// ---------- save a file outside the Claude viewer: share sheet on phones, normal download otherwise ----------
 async function saveBlob(o){
  const f=new File([o.data],o.filename,{type:o.data.type});
  try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:o.filename});return}}catch(e){if(e&&e.name==='AbortError')throw {code:'declined'}}
