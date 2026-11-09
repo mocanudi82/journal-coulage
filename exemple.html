@@ -33,8 +33,6 @@
  --b-blue:#5B97FF; --b-orange:#FF7A3D; --b-green:#8BD35C; --brand-ink:#0B1030; --accent:#FF7A3D;
  --ok:#7BD35A; --ok-bg:#16301A; --nok:#FF8F86; --nok-bg:#3A1B1A; --warn:#FFB26B; --warn-bg:#3B2410; --na:#B4B9C9; --na-bg:#242A4A;
  --bar:#0A0E22; --bar-ink:#FFFFFF; --tabs:#070A1B; --lgl:none; --lgd:block; color-scheme:dark}
-:root[data-brand="orange"]{--brand:var(--b-orange)}
-:root[data-brand="green"]{--brand:var(--b-green)}
 *{box-sizing:border-box}
 html,body{height:100%}
 body{background:var(--bg);color:var(--ink);font:15px/1.4 var(--f);padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px))}
@@ -109,7 +107,9 @@ h3{font:700 12px/1.2 var(--f);letter-spacing:.08em;text-transform:uppercase;colo
 .thumbs{display:flex;gap:6px;flex-wrap:wrap}
 .thumbs img,.thumbs .ph{width:64px;height:64px;object-fit:cover;border-radius:4px;border:1px solid var(--line);background:var(--na-bg)}
 .cam{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 12px;border:1.5px dashed var(--brand);border-radius:4px;color:var(--brand);font:700 13.5px var(--f);background:transparent}
-.cam.need{border-color:var(--nok);color:var(--nok)}
+.cam.need{border-color:var(--accent);color:var(--warn);background:var(--warn-bg)}
+.cam.got{border:1.5px solid var(--ok);color:var(--ok);background:var(--ok-bg)}
+.btn.go{background:var(--ok);color:#fff}
 .cam svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8}
 label.f{display:flex;flex-direction:column;gap:3px;font:700 10.5px var(--f);color:var(--mut);text-transform:uppercase;letter-spacing:.04em;min-width:0}
 .in{width:100%;min-height:44px;border:1.5px solid var(--line);border-radius:4px;background:var(--card);padding:8px 10px;font:400 16px var(--f);color:var(--ink);text-transform:none;letter-spacing:0;font-variant-numeric:tabular-nums}
@@ -131,9 +131,6 @@ textarea.in{min-height:64px;resize:vertical}
 .series button b{font:700 22px/1 var(--f);color:var(--head)}
 .series button.done{border-color:var(--ok);background:var(--ok-bg)}
 details summary{cursor:pointer;font:700 13px var(--f);color:var(--brand);min-height:32px;display:flex;align-items:center}
-.brandpick{display:flex;gap:10px;align-items:center}
-.brandpick button{width:34px;height:34px;border-radius:4px;border:2px solid var(--line)}
-.brandpick button[aria-pressed=true]{outline:3px solid var(--head);outline-offset:2px}
 .rp{background:#fff;color:#222;border-radius:4px;padding:14px;font:13px/1.4 Arial,sans-serif;border:1px solid var(--line)}
 .rp h4{font:700 14px Arial,sans-serif;color:#001A70;margin:14px 0 5px;border-bottom:2px solid #FE5815;padding-bottom:2px}
 .rp table{width:100%;border-collapse:collapse;font-size:12px}
@@ -431,10 +428,8 @@ function homeView(){
  const cards=S.pours.map(p=>{const s=stats(p),[ph,pc]=phase(p),nc=ncList(p).length;
   return `<button class="card" data-act="open" data-id="${p.id}" style="text-align:left;width:100%"><div class="row"><div class="grow"><div style="font:700 18px var(--f);color:var(--head)">WTG ${esc(p.wtg||'?')} · ${esc(p.project||'Projet')}</div><div class="small mut mono">${fdate(p.date)}${s.plan?` · ${f1(s.vol)} / ${f1(s.plan)} m³`:` · ${f1(s.vol)} m³`} · ${s.n} toupies</div></div><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end"><span class="pill ${pc}">${ph}</span>${nc?`<span class="pill nok">NC ${nc}</span>`:''}${p.example?'<span class="pill tag">exemple</span>':''}</div></div></button>`}).join('');
  return `<div><h2 style="margin-top:0">Journal de coulage</h2><div class="small mut">Fondations d’éoliennes · Direction Ingénierie – Département Génie Civil</div></div>${cards||'<p class="mut">Aucun coulage. Créez la fiche d’une éolienne pour commencer.</p>'}<button class="btn full" data-act="new">＋ Nouveau coulage</button>${delivCard()}<p class="small mut">Une fiche par éolienne. Les données restent sur ce téléphone ; exportez le rapport Word en fin de coulage.</p>
- <h3>Sauvegarde</h3><div class="grid2"><button class="btn ghost" data-act="backup">Sauvegarder mes fiches</button><button class="btn ghost" data-act="restore">Restaurer</button></div>
- <h3>Couleur de l’application</h3><div class="brandpick">${[['blue','Bleu','#1057C8'],['orange','Orange','#FE5815'],['green','Vert','#4F9E30']].map(([k,l,c])=>`<button data-act="brand" data-b="${k}" style="background:${c}" aria-label="${l}" aria-pressed="${(document.documentElement.dataset.brand||'blue')===k}"></button>`).join('')}</div>`;
+ <h3>Sauvegarde</h3><div class="grid2"><button class="btn ghost" data-act="backup">Sauvegarder mes fiches</button><button class="btn ghost" data-act="restore">Restaurer</button></div>`;
 }
-A.brand=t=>{document.documentElement.dataset.brand=t.dataset.b;try{localStorage.setItem('journal-brand',t.dataset.b)}catch(e){}render()};
 A.theme=()=>{const r=document.documentElement,d=r.dataset.theme==='dark'||(!r.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches);r.dataset.theme=d?'light':'dark'};
 A.home=()=>{S.cur=null;saveLS();render()};
 A.open=t=>{S.cur=t.dataset.id;TAB=P().start&&!P().end?'pour':'gate';saveLS();render()};
@@ -475,7 +470,7 @@ function itemCard(p,i){
  <div class="seg" role="group" aria-label="Statut">${[['ok','OUI'],['nok','NON'],['na','NA']].map(([v,l])=>`<button data-act="set" data-id="${id}" data-v="${v}" aria-pressed="${s.s===v}">${l}</button>`).join('')}</div>
  ${s.s?`<select class="in" style="min-height:38px;font:400 13px var(--f)" data-chg="isrc" data-id="${id}" aria-label="Source de l’information">${srcOpts(s.src)}</select>`:''}
  ${(s.s==='nok'||s.s==='na'||s.obs)?`<label class="f">Observation${nokNoObs?' · obligatoire (NON / NA)':''}<textarea class="in" data-chg="obs" data-id="${id}" ${nokNoObs?'style="border-color:var(--nok)"':''}>${esc(s.obs||'')}</textarea></label>`:''}
- <div class="row wrap">${thumbs(s.ph)}<button class="cam${need?' need':''}" data-act="shot" data-id="${id}">${ICON.cam}${s.ph&&s.ph.length?'Ajouter':'Photo'}</button>${s.s?'':`<button class="cam" style="border-style:solid;border-color:var(--line);color:var(--mut)" data-act="note" data-id="${id}">Note</button>`}</div>${i[6]==='x'?`<button class="cam" style="border-style:solid;border-color:var(--line);color:var(--nok);align-self:flex-start" data-act="xdel" data-id="${id}">Supprimer ce point</button>`:''}</div>`;
+ <div class="row wrap">${thumbs(s.ph)}<button class="cam${need?' need':(s.ph&&s.ph.length?' got':'')}" data-act="shot" data-id="${id}">${ICON.cam}${s.ph&&s.ph.length?'Ajouter':'Photo'}</button>${s.s?'':`<button class="cam" style="border-style:solid;border-color:var(--line);color:var(--mut)" data-act="note" data-id="${id}">Note</button>`}</div>${i[6]==='x'?`<button class="cam" style="border-style:solid;border-color:var(--line);color:var(--nok);align-self:flex-start" data-act="xdel" data-id="${id}">Supprimer ce point</button>`:''}</div>`;
 }
 A.set=t=>{const p=P(),id=t.dataset.id,i=ITEM[id],s=stOf(p,id),v=t.dataset.v;
  if(s.s===v){delete s.s}else{
@@ -796,7 +791,7 @@ function reportView(p){
  <label class="f">Commentaires généraux / fiches de non-conformité ouvertes<textarea class="in" data-chg="cm" style="min-height:90px">${esc(p.comments)}</textarea></label>
  <h3>Intervenants et signatures</h3>${sigs}
  <button class="btn ghost full" data-act="xradd">＋ Ajouter un intervenant</button>
- <button class="btn full" data-act="word">Exporter le rapport Word (.docx)</button>
+ <button class="btn full${warn.length?'':' go'}" data-act="word">Exporter le rapport Word (.docx)</button>
  <details><summary>Aperçu du rapport</summary><div class="rp">${reportHTML(p,m)}</div></details>`;
 }
 const pr_missing=m=>m.pr.missing.length>0;
@@ -983,7 +978,7 @@ function seedExample(){
 // ---------- boot ----------
 const SEED=true;
 (async function(){
- loadLS();try{const b=localStorage.getItem('journal-brand');if(b)document.documentElement.dataset.brand=b}catch(e){}
+ loadLS();
  if(SEED&&!S.pours.length&&!S.seeded){S.pours.push(seedExample());S.seeded=1;saveLS()}
  S.pours.forEach(p=>{p.pres=p.pres||{from:'',to:''};p.tlog=p.tlog||[];p.thermal=p.thermal||{tmax:'',dT:''}});
  render();
