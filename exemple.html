@@ -663,6 +663,7 @@ function seriesView(p){
  return `<h2>Éprouvettes</h2><div class="card"><div class="row"><div class="grow"><b style="font:700 26px var(--f);color:var(--head)">${done} / ${p.series.length}</b> <span class="small mut mono">séries prélevées</span></div></div><div class="bar" style="margin-top:6px"><i style="width:${done/p.series.length*100}%"></i></div></div>
  <div class="series">${p.series.map((x,i)=>`<button class="${x?'done':''}" data-act="serie" data-i="${i}"><b>${i+1}</b><span class="small mono">${x?(x.el==='fut'?'fût':'ass. + déc.'):'à faire'}</span><span class="small mono mut">${x?'BL '+esc(x.bl||'–'):''}</span>${x?`<span class="small mono mut">${eprN(x)} épr.</span>`:''}</button>`).join('')}</div>
  <div class="card small"><b>Éprouvettes : nombre et âges libres, série par série</b><div class="mono mut" style="margin-top:4px">Ouvrez une série pour fixer le nombre d’éprouvettes par échéance (7, 14, 28 jours, réserve…).<br>Étiquette : n° d’éolienne · centrale · n° de BL</div></div>
+ <button class="btn ghost full" data-act="seradd">＋ Ajouter une série (au-delà des ${p.series.length} prévues)</button>
  <h3>Échéancier des écrasements</h3>${echeancier(p)}
  <div class="alert warn"><div>Répartition CCTP : 1 série pour le fût et 7 séries pour l’assiette non déjaugée (9 si déjaugée). Le CCTP et la check-list citent aussi « 8 séries » : ajustez le nombre de séries dans les réglages si besoin.</div></div>`;
 }
@@ -736,10 +737,10 @@ const ageLbl=a=>(AGES.find(x=>x[0]===a)||[a,a+' j'])[1];
 const eprN=x=>((x&&x.eprs)||EPR_DEF).reduce((a,e)=>a+(num(e.n)||0),0);
 const eprTxt=x=>((x&&x.eprs)||[]).map(e=>`${e.n}×${e.a==='res'?'rés.':e.a+' j'}${e.r?' ('+e.r+' MPa)':''}`).join(' · ')||'–';
 function echeancier(p){
- const m={};p.series.filter(Boolean).forEach(x=>(x.eprs||EPR_DEF).forEach(e=>{m[e.a]=(m[e.a]||0)+(num(e.n)||0)}));
+ const m={},rs={};p.series.filter(Boolean).forEach(x=>(x.eprs||EPR_DEF).forEach(e=>{m[e.a]=(m[e.a]||0)+(num(e.n)||0);const r=num(e.r);if(r!=null){(rs[e.a]=rs[e.a]||[]).push(r)}}));
  const ages=Object.keys(m).sort((a,b)=>ageDays(a)-ageDays(b));
  if(!ages.length)return '<div class="card small mut">L’échéancier apparaît dès qu’une série est enregistrée.</div>';
- return `<div class="card"><table class="mono small" style="width:100%">${ages.map(a=>`<tr><td>${ageLbl(a)}</td><td>${m[a]} épr.</td><td><b>${fdate(addDays(p.date,ageDays(a)))}</b></td></tr>`).join('')}</table><div class="small mut" style="margin-top:6px">Résultats transmis au MOE sous 2 jours après chaque essai.</div></div>`;
+ return `<div class="card"><table class="mono small" style="width:100%">${ages.map(a=>`<tr><td>${ageLbl(a)}</td><td>${m[a]} épr.</td><td><b>${fdate(addDays(p.date,ageDays(a)))}</b></td><td>${rs[a]?`${rs[a].length} résultat(s) · moy. <b>${f1(rs[a].reduce((x,y)=>x+y,0)/rs[a].length)} MPa</b>`:'<span class="mut">résultat à saisir</span>'}</td></tr>`).join('')}</table><div class="small mut" style="margin-top:6px">Résultats transmis au MOE sous 2 jours après chaque essai.</div></div>`;
 }
 
 // ---------- photos libres (non rattachées à un point) ----------
@@ -754,6 +755,8 @@ A.freeshot=()=>{const p=P();pickPhoto('Photo',id=>{(p.freePh=p.freePh||[]).push(
 let XFC=null;
 function freeCap(){const p=P();if(!XFC||!PH[XFC])return;openSheet(`<h2>Légende de la photo</h2><img src="${PH[XFC]}" alt="Photo" style="width:100%;max-height:40vh;object-fit:contain;border-radius:8px"><label class="f">Légende<input class="in" id="fc-t" placeholder="Ex. Vue d’ensemble après vibration" value="${esc(p.freeCap[XFC]||'')}"></label><div class="row sf"><button class="btn sec grow" data-act="close">Plus tard</button><button class="btn grow" data-act="freecapok">Enregistrer</button></div>`)}
 A.freecapok=()=>{const p=P();p.freeCap[XFC]=$('#fc-t').value.trim();closeSheet();saveLS();render()};
+
+A.seradd=()=>{const p=P();p.series.push(null);p.th.seriesTot=p.series.length;saveLS();render()};
 
 // ---------- Rapport ----------
 const SL={ok:'OUI',nok:'NON',na:'NA'};
