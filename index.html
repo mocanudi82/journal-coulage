@@ -494,17 +494,17 @@ A.open=t=>{S.cur=t.dataset.id;TAB=P().start&&!P().end?'pour':'gate';saveLS();ren
 A.tab=t=>{TAB=t.dataset.t;render()};
 const MODELS={cctp:{n:'CCTP Lot Fondations (standard)',project:'',th:{flow:70}},gouz:{n:'Gouzeaucourt (59), check-list',project:'Gouzeaucourt (59)',th:{flow:60}}};
 A.new=()=>{
- const l=S.pours[S.pours.length-1]||{},cl=cenList(l);
+ const l={};
  openSheet(`<h2>Nouveau coulage</h2>
- ${S.pours.length?`<label class="f">Copier les réglages d’un coulage précédent<select class="in" id="n-src"><option value="">— aucun —</option>${S.pours.map(x=>`<option value="${x.id}"${x===l?' selected':''}>WTG ${esc(x.wtg)} · ${fdate(x.date)}</option>`).join('')}</select></label><div class="small mut" style="margin-top:-6px">Reprend projet, volumes prévus, classes, seuils, intervenants (sociétés, noms) et points supplémentaires. Rien d’autre.</div>`:''}
- <label class="f">Modèle de seuils<select class="in" id="n-model"><option value="gouz">${MODELS.gouz.n} · 60 m³/h</option><option value="cctp">${MODELS.cctp.n} · 70 m³/h</option></select></label>
- <div class="grid2"><label class="f">Projet<input class="in" id="n-proj" value="${esc(l.project||'Gouzeaucourt (59)')}"></label><label class="f">N° éolienne<input class="in" id="n-wtg" placeholder="ex. 04" inputmode="text"></label></div>
+ ${S.pours.length?`<label class="f">Copier les réglages d’un coulage précédent<select class="in" id="n-src"><option value="">— aucun —</option>${S.pours.map(x=>`<option value="${x.id}"}>WTG ${esc(x.wtg)} · ${fdate(x.date)}</option>`).join('')}</select></label><div class="small mut" style="margin-top:-6px">Reprend projet, volumes prévus, classes, seuils, intervenants (sociétés, noms) et points supplémentaires. Rien d’autre.</div>`:''}
+ <label class="f">Modèle de seuils<select class="in" id="n-model"><option value="cctp">${MODELS.cctp.n} · 70 m³/h</option><option value="gouz">${MODELS.gouz.n} · 60 m³/h</option></select></label>
+ <div class="grid2"><label class="f">Projet<input class="in" id="n-proj" value=""></label><label class="f">N° éolienne<input class="in" id="n-wtg" placeholder="ex. 04" inputmode="text"></label></div>
  <label class="f">Type de fondation<select class="in" id="n-fd">${FOUND.map(([k,t])=>`<option value="${k}"${fdOf(l)===k?' selected':''}>${t}</option>`).join('')}</select></label><label class="f">Renforcement de sol<select class="in" id="n-rf">${REINF.map(([k,t])=>`<option value="${k}"${rfOf(l)===k?' selected':''}>${t}</option>`).join('')}</select></label><label class="f">Rôle d’EDF Power Solutions<select class="in" id="n-role">${ROLEM.map(([k,t])=>`<option value="${k}"${(l.role||'ext')===k?' selected':''}>${t}</option>`).join('')}</select></label><label class="f">CCTP rédigé par<select class="in" id="n-cb">${CCTPB.map(([k,t])=>`<option value="${k}"${(l.cctpBy||'edf')===k?' selected':''}>${t}</option>`).join('')}</select></label>
- <div class="grid2"><label class="f">Date du coulage<input class="in" type="date" id="n-date" value="${today()}"></label><label class="f">Rédacteur<input class="in" id="n-dr" value="${esc(l.drafter||'Daniel Mocanu')}"></label></div>
+ <div class="grid2"><label class="f">Date du coulage<input class="in" type="date" id="n-date" value="${today()}"></label><label class="f">Rédacteur<input class="in" id="n-dr" value=""></label></div>
  <div class="grid2"><label class="f">Volume assiette + décaissé (m³)<input class="in" id="n-va" inputmode="decimal" value="${esc(l.volA||'')}"></label><label class="f">Volume fût (m³)<input class="in" id="n-vf" inputmode="decimal" value="${esc(l.volF||'')}"></label></div>
   <div class="row sf"><button class="btn sec grow" data-act="close">Annuler</button><button class="btn grow" data-act="create">Créer</button></div>`);
  $('#n-model').onchange=e=>{if(e.target.value==='gouz')$('#n-proj').value='Gouzeaucourt (59)'};
- if($('#n-src'))$('#n-src').onchange=e=>{const x=S.pours.find(y=>y.id===e.target.value)||{},c=cenList(x);$('#n-proj').value=x.project||'Gouzeaucourt (59)';$('#n-dr').value=x.drafter||'Daniel Mocanu';$('#n-va').value=x.volA||'';$('#n-vf').value=x.volF||'';$('#n-fd').value=fdOf(x);$('#n-rf').value=rfOf(x);$('#n-role').value=x.role||'ext';$('#n-cb').value=x.cctpBy||'edf'};
+ if($('#n-src'))$('#n-src').onchange=e=>{const x=S.pours.find(y=>y.id===e.target.value)||{},c=cenList(x);$('#n-proj').value=x.project||'';$('#n-dr').value=x.drafter||'';$('#n-va').value=x.volA||'';$('#n-vf').value=x.volF||'';$('#n-fd').value=fdOf(x);$('#n-rf').value=rfOf(x);$('#n-role').value=x.role||'ext';$('#n-cb').value=x.cctpBy||'edf'};
 };
 A.close=()=>closeSheet();
 A.create=()=>{const m=MODELS[$('#n-model').value];
