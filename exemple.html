@@ -528,8 +528,8 @@ function itemCard(p,i){
  ${extra}
  <div class="seg" role="group" aria-label="Statut">${[['ok','OUI'],['nok','NON'],['na','NA']].map(([v,l])=>`<button data-act="set" data-id="${id}" data-v="${v}" aria-pressed="${s.s===v}">${l}</button>`).join('')}</div>
  ${s.s?`<select class="in" style="min-height:38px;font:400 13px var(--f)" data-chg="isrc" data-id="${id}" aria-label="Source de l’information">${srcOpts(s.src)}</select>`:''}
- ${(s.s==='nok'||s.s==='na'||s.obs)?`<label class="f">Observation${nokNoObs?' · obligatoire (NON / NA)':''}<textarea class="in" data-chg="obs" data-id="${id}" ${nokNoObs?'style="border-color:var(--nok)"':''}>${esc(s.obs||'')}</textarea></label>`:''}
- <div class="row wrap">${thumbs(s.ph)}<button class="cam${need?' need':(s.ph&&s.ph.length?' got':'')}" data-act="shot" data-id="${id}">${ICON.cam}${s.ph&&s.ph.length?'Ajouter':'Photo'}</button>${s.s?'':`<button class="cam" style="border-style:solid;border-color:var(--line);color:var(--mut)" data-act="note" data-id="${id}">Note</button>`}</div>${i[6]==='x'?`<button class="cam" style="border-style:solid;border-color:var(--line);color:var(--nok);align-self:flex-start" data-act="xdel" data-id="${id}">Supprimer ce point</button>`:''}</div>`;
+ ${(s.s==='nok'||s.s==='na'||s.obs)?`<label class="f">${s.s==='ok'||!s.s?'Commentaire':'Observation'}${nokNoObs?' · obligatoire (NON / NA)':''}<textarea class="in" data-chg="obs" data-id="${id}" ${nokNoObs?'style="border-color:var(--nok)"':''}>${esc(s.obs||'')}</textarea></label>`:''}
+ <div class="row wrap">${thumbs(s.ph)}<button class="cam${need?' need':(s.ph&&s.ph.length?' got':'')}" data-act="shot" data-id="${id}">${ICON.cam}${s.ph&&s.ph.length?'Ajouter':'Photo'}</button>${(s.s==='nok'||s.s==='na'||s.obs)?'':`<button class="cam" style="border-style:solid;border-color:var(--line);color:var(--mut)" data-act="note" data-id="${id}">Commentaire</button>`}</div>${i[6]==='x'?`<button class="cam" style="border-style:solid;border-color:var(--line);color:var(--nok);align-self:flex-start" data-act="xdel" data-id="${id}">Supprimer ce point</button>`:''}</div>`;
 }
 A.set=t=>{const p=P(),id=t.dataset.id,i=ITEM[id],s=stOf(p,id),v=t.dataset.v;
  if(s.s===v){delete s.s}else{
@@ -540,7 +540,7 @@ A.isrc=t=>{stOf(P(),t.dataset.id).src=t.value;saveLS();later()};
 A.fld=t=>{const s=stOf(P(),t.dataset.id);s[t.dataset.k]=t.value;saveLS();later()};
 A.thm=t=>{P().thermal[t.dataset.k]=t.value;saveLS();later()};
 A.obs=t=>{stOf(P(),t.dataset.id).obs=t.value;saveLS();later()};
-A.note=t=>{const s=stOf(P(),t.dataset.id);s.obs=s.obs||' ';saveLS();render()};
+A.note=t=>{const id=t.dataset.id,s=stOf(P(),id);s.obs=s.obs||' ';saveLS();render();setTimeout(()=>{const e=document.querySelector('textarea[data-id="'+id+'"]');if(e)e.focus()},50)};
 A.shot=t=>{const p=P(),id=t.dataset.id,s=stOf(p,id);pickPhoto(id+' '+ITEM[id][1].slice(0,38),pid=>{(s.ph=s.ph||[]).push(pid)})};
 A.viewph=t=>{const id=t.dataset.id;openSheet(`<img src="${PH[id]}" alt="Photo" style="width:100%;border-radius:8px"><div class="row sf"><button class="btn red grow" data-act="delph" data-id="${id}">Supprimer</button><button class="btn sec grow" data-act="close">Fermer</button></div>`)};
 A.delph=t=>{const id=t.dataset.id,p=P();const arrs=[];ALL.forEach(i=>{const s=itemState(p,i[0]);if(s.ph)arrs.push(s.ph)});if(p.freePh)arrs.push(p.freePh);p.trucks.forEach(x=>x.ph&&arrs.push(x.ph));p.inc.forEach(x=>x.ph&&arrs.push(x.ph));if(p.lab&&p.lab.ph)arrs.push(p.lab.ph);arrs.forEach(a=>{if(a.includes(id))rmPhoto(a,id)});closeSheet();render()};
